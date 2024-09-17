@@ -1,0 +1,120 @@
+body {
+  margin: 0;
+  padding: 0;
+}
+.wrapper {
+  max-width: 1280px;
+  margin: 0 auto;
+}
+.header {
+  display: flex;
+  justify-content: space-between;
+  padding: 20px 0 20px 0;
+}
+.header h3 {
+  margin: 0;
+}
+.header .searchInput {
+  border: 1px solid #000;
+  width: 18%;
+  padding: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: start;
+  gap: 5px;
+  border-radius: 5px;
+}
+.header .searchInput input {
+  border: none;
+  width: 100%;
+}
+.header .searchInput input:focus-visible {
+  outline: none;
+}
+.header .header-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  justify-content: space-between;
+  width: 20%;
+}
+
+.flex-style-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.products .part2 {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: space-between;
+  margin-top: 50px;
+}
+.products .the-best {
+  display: flex;
+  align-items: center;
+  justify-content: end;
+  gap: 40px;
+}
+.products .product-items {
+  width: 80%;
+}
+.card {
+  border: 1px solid #4949498a;
+  box-shadow: 0px 0px 10px 1px #00000073;
+  width: 28%;
+  display: flex;
+  flex-direction: column;
+  padding: 10px;
+}
+
+.card img {
+  width: 100%;
+  height: 200px;
+}
+.card .cardName-and-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.products .render {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: space-between;
+  margin-top: 50px;
+}
+.products .navbar {
+    border: 1px solid #000;
+    width: 18%;
+    padding: 10px;
+}
+.products .navbar .intro {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.part3 {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+}
+.flx {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.priceRange {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: center;
+  justify-content: start;
+}
+.info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
