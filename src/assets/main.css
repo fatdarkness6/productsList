@@ -118,3 +118,30 @@ body {
   justify-content: space-between;
   width: 100%;
 }
+
+.dontShow {
+  height: 0;
+  
+  visibility: hidden;
+}
+.show {
+  height: 50px;
+}
+#input {
+  transition: 0.5s;
+  overflow: hidden;
+}
+.color {
+  cursor: pointer;
+}
+.part3 i {
+  transform: rotate(90deg);
+  transition: all 0.4s;
+}
+#rotate {
+  transform: rotate(0deg);
+}
+#divStyle {
+  transition: all 0.5s;
+}
+

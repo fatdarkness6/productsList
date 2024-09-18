@@ -2,12 +2,13 @@
 import { computed } from 'vue'
 let props = defineProps({
   items: Object,
-  img: Object
+  img: Object,
 })
 
 let it = computed(() => {
-  return props.img.filter((image) => image.id === props.items.relationships.images.data[0].id)
+  return props.img.filter((image) => image.id === props.items?.relationships.images.data[0].id)
 })
+
 </script>
 
 <template>
@@ -16,10 +17,8 @@ let it = computed(() => {
       <img :src="items.attributes.styles[0].url" alt="Product Image" />
     </div>
     <div class="cardName-and-info">
-      
         <h3>{{ items.attributes.name }}</h3>
         <i class="fa-regular fa-heart"></i>
-      
     </div>
     <div class="price">
         <h3>{{ items.attributes.price }} $</h3>

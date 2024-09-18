@@ -112,7 +112,7 @@ onMounted(() => {
   </div>
 </template> -->
 <script setup>
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, watch , computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import renderProducts from './renderProducts/renderProducts.vue'
 import headerCp from '../header/headerCp.vue'
@@ -124,6 +124,11 @@ let itemsIsExistInput = ref(false)
 let showInputsForPrice = ref(false)
 let minPrice = ref(null)
 let maxPrice = ref(null)
+let updateWithFilter = ref(1)
+let options = ref([])
+let setClass = ref(false)
+let setQueryOptionsColor = ref("")
+let setQueryOptionsSize = ref("")
 
 const router = useRouter()
 const route = useRoute()
@@ -135,13 +140,14 @@ async function productApi() {
       {
         params: {
           'filter[in_stock]': route.query.onlyExist ? route.query.onlyExist : null,
-          'filter[price]':
-            minPrice.value && maxPrice.value ? `${minPrice.value},${maxPrice.value}` : null
+          'filter[price]':route.query.minPrice  && route.query.maxPrice  ? `${route.query.minPrice },${route.query.maxPrice }` : null,
         }
       }
     )
     infoValue.value = response.data.data
     img.value = response.data.included
+    options.value = response.data.meta.filters.option_types
+  
   } catch (error) {
     console.error('API Request failed:', error)
   }
@@ -156,9 +162,12 @@ function clearFilters() {
   minPrice.value = null
   maxPrice.value = null
   router.replace({ query: {} })
+  // updateWithFilter.value = ++updateWithFilter.value
 }
 
-watch(itemsIsExistInput, () => {
+
+
+watch( itemsIsExistInput, () => {
   if (itemsIsExistInput.value) {
     router.push({ query: { ...route.query, onlyExist: itemsIsExistInput.value } })
   } else {
@@ -172,16 +181,22 @@ watch([minPrice, maxPrice], () => {
   }
 })
 
-watch(
-  () => route.query,
+watch(() =>route.query  ,
   () => {
     productApi()
   }
 )
+watch([setQueryOptionsColor , setQueryOptionsSize] , () => {
+  
+ 
+   router.push({query: {...route?.query , tshirtColor: setQueryOptionsColor.value , tshirtSize :setQueryOptionsSize.value}})
+ 
+})
 
 onMounted(() => {
   productApi()
 })
+
 </script>
 
 <template>
@@ -214,24 +229,44 @@ onMounted(() => {
             <h3>Filters</h3>
             <button @click="clearFilters"><h4>Clear filters</h4></button>
           </div>
-          <div class="color flx">
-            <h4>color</h4>
-            <i class="fa-solid fa-sort-down"></i>
+          <div  class="color ">
+            <div @click="setClass = !setClass" class="p1 flx">
+               <h4>color</h4>
+            <i :id="[setClass && 'rotate']" class="fa-solid fa-sort-down"></i>
+            </div>
+            <div id="divStyle"  :class="[setClass ? 'p2' : 'dontShow']">
+              <select v-model="setQueryOptionsColor">
+                <option value="" >
+                  choese your color
+                </option>
+                
+                  <option  v-for="option in options[0]?.option_values" :key="option.id" :value="option.name">
+                    {{ option.name }}
+                  </option>
+                
+              </select>
+              <select v-model="setQueryOptionsSize">
+                <option value="" >
+                  choese your size
+                </option>
+                
+                  <option  v-for="option in options[1]?.option_values" :key="option.id" :value="option.name">
+                    {{ option.name }}
+                  </option>
+                
+              </select>
+            </div>
           </div>
           <div class="existProducts flx">
             <h4>existProducts</h4>
             <input :checked="itemsIsExistInput" @change="handleCheckboxChange" type="checkBox" />
           </div>
-          <div class="justGraphicProducts flx">
-            <h4>justGraphicProducts</h4>
-            <input type="checkBox" />
-          </div>
           <div class="priceRange">
             <div @click="showInputsForPrice = !showInputsForPrice" class="info flx">
               <h4>priceRange</h4>
-              <i class="fa-solid fa-sort-down"></i>
+              <i :id="[showInputsForPrice && 'rotate']" class="fa-solid fa-sort-down"></i>
             </div>
-            <div v-if="showInputsForPrice">
+            <div id="input" :class="[showInputsForPrice ? 'show' : 'dontShow']">
               <input v-model="minPrice" type="number" placeholder="min" />
               <input v-model="maxPrice" type="number" placeholder="max" />
             </div>
