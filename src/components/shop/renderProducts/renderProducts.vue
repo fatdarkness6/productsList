@@ -14,7 +14,7 @@ let it = computed(() => {
 <template>
   <div class="card">
     <div v-for="items in it" :key="items.id" class="img">
-      <img :src="items.attributes.styles[0].url" alt="Product Image" />
+      <img :src="items.attributes.original_url" alt="Product Image" />
     </div>
     <div class="cardName-and-info">
         <h3>{{ items.attributes.name }}</h3>
