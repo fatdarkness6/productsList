@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, watch, computed, onUpdated } from 'vue';
+import { ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import renderProducts from './renderProducts/renderProducts.vue';
 import headerCp from '../header/headerCp.vue';
@@ -8,43 +8,44 @@ import qs from 'qs';
 
 let infoValue = ref([]);
 let img = ref([]);
-let showInputsForPrice = ref(false);
 let options = ref([]);
-const submitQuery = ref(false);
 let handleOptions = ref({
   itemsIsExistInput : false,
   minPrice : null,
   maxPrice : null,
+  setQueryOptions : {},
+  submitQuery:false,
+  showInputsForPrice:false,
+  loading: false
 })
 
 
 let setClass = ref(false);
 
-let setQueryOptions = ref({}); // Store selected options as an object
 
 const router = useRouter();
 const route = useRoute();
 
 async function productApi() {
  
+ handleOptions.value.loading = true;
   
-  try {
-    console.log(route.query)
-    const qu = JSON.parse(JSON.stringify(route.query))
-    const response = await axios.get(
+ 
+      await axios.get(
       `https://demo.spreecommerce.org/api/v2/storefront/products?include=images`, {
-        params: qu
+        params: route.query
       }
-      
-    );
-    infoValue.value = response.data.data;
-    img.value = response.data.included;
-    options.value = response.data.meta.filters.option_types;
-
-  } catch (error) {
-    console.log(error)
+    ).then((response) => {
+      infoValue.value = response.data.data;
+      img.value = response.data.included;
+      options.value = response.data.meta.filters.option_types;
+    }).catch ((e) => {
+      console.log(e)
+    }).finally(() => {
+      handleOptions.value.loading = false;
+    })
+     
   }
-}
 
 function handleCheckboxChange(event) {
   handleOptions.value.itemsIsExistInput= event.target.checked;
@@ -54,23 +55,22 @@ function clearFilters() {
   handleOptions.value.itemsIsExistInput = false;
   handleOptions.value.minPrice = null;
   handleOptions.value.maxPrice = null;
-  setQueryOptions.value = {}; 
+  handleOptions.value.setQueryOptions = {}; 
   router.replace({ query: {} });
 }
 const toggleQuery = () => {
-  submitQuery.value = !submitQuery.value; 
+  handleOptions.value.submitQuery = !handleOptions.value.submitQuery; 
 };
-watch(handleOptions.value.itemsIsExistInput, () => {
+watch(() => handleOptions.value.itemsIsExistInput, () => {
 
   router.push({ query: { ...route.query, onlyExist: handleOptions.value.itemsIsExistInput }});
 
 });
-watch( submitQuery, () => {
+watch( () => handleOptions.value.submitQuery, () => {
  
-  if (handleOptions.value.minPrice !== null && handleOptions.value.maxPrice !== null && submitQuery.value ) {
+  if (handleOptions.value.minPrice !== null && handleOptions.value.maxPrice !== null &&handleOptions.value.submitQuery ) {
     let filterParams ={
     filter : {
-      // in_stock : route.query.onlyExist ? route.query.onlyExist : null,
       price :  `${handleOptions.value.minPrice},${handleOptions.value.maxPrice}`
     },
   }
@@ -79,34 +79,26 @@ watch( submitQuery, () => {
   }
 });
 
-watch(() => route.query, (from, to) =>  {
-  console.log({ from, to })
-  console.log('route changed')
+watch(() => route.query, () =>  {
   productApi();
 });
 
-watch( setQueryOptions.value, () => {
- 
+watch( handleOptions.value.setQueryOptions, () => {
   let colorOptions = {
     filter:{
       options:{}
     }
   }
-  Object.keys(setQueryOptions.value).forEach((key) => {
-      if (setQueryOptions.value[key]) {
-        colorOptions.filter.options[key] = setQueryOptions.value[key];
+  Object.keys(handleOptions.value.setQueryOptions).forEach((key) => {
+      if (handleOptions.value.setQueryOptions[key]) {
+        colorOptions.filter.options[key] = handleOptions.value.setQueryOptions[key];
       }
     });
     let qqs = qs.stringify(colorOptions);
   router.push(`?${qqs}`);
 });
 
-// onMounted(() => {
-  
-  
-//     productApi();
-  
-// });
+
 </script>
 
 <template>
@@ -116,22 +108,28 @@ watch( setQueryOptions.value, () => {
         <headerCp />
       </div>
       <div class="part2">
-        <h3>adadad</h3>
-        <h3>adadada</h3>
-        <h3>dadada</h3>
-        <h3>dadadadad</h3>
-        <h3>dadadad</h3>
+        <h3>جشن مهمانی</h3>
+        <h3>کارت پستر</h3>
+        <h3>مدرسه و اداره</h3>
+        <h3>اکسسوری</h3>
+        <h3>قاب موبایل</h3>
+        <h3>لوازم خانه</h3>
+        <h3>پوشاک</h3>
       </div>
       <div class="part3">
         <div class="product-items">
           <div class="the-best">
-            <h3>fafafa</h3>
-            <h3>faffa</h3>
-            <h3>fafafa</h3>
-            <h3>fafaf</h3>
+            <h3>ارزان ترین</h3>
+            <h3>گران ترین</h3>
+            <h3>پر فروش ترین</h3>
+            <h3>جدید ترین</h3>
+            <h3 class="redBorder">پر بازدید ترین</h3>
           </div>
           <div class="render">
-            <renderProducts v-for="items in infoValue" :key="items.id" :items="items" :img="img" />
+            <h1 v-if="handleOptions.loading">loading...</h1>
+            <h1 v-else-if="infoValue.length === 0">No products found.</h1>
+            <renderProducts v-else v-for="items in infoValue" :key="items.id" :items="items" :img="img" />
+
           </div>
         </div>
         <div class="navbar">
@@ -145,7 +143,7 @@ watch( setQueryOptions.value, () => {
               <i :id="[setClass && 'rotate']" class="fa-solid fa-sort-down"></i>
             </div>
             <div id="divStyle" :class="[setClass ? 'p2' : 'dontShow']">
-              <select v-for="option in options" :key="option.id" v-model="setQueryOptions[option.name]">
+              <select v-for="option in options" :key="option.id" v-model="handleOptions.setQueryOptions[option.name]">
                 <option value="">Select {{ option.name }}</option>
                 <option v-for="optionValue in option.option_values" :key="optionValue.id" :value="optionValue.name">
                   {{ optionValue.name }}
@@ -158,11 +156,11 @@ watch( setQueryOptions.value, () => {
             <input :checked="handleOptions.itemsIsExistInput" @change="handleCheckboxChange" type="checkbox" />
           </div>
           <div class="priceRange">
-            <div @click="showInputsForPrice = !showInputsForPrice" class="info flx">
+            <div @click="handleOptions.showInputsForPrice = !handleOptions.showInputsForPrice" class="info flx">
               <h4>Price Range</h4>
-              <i :id="[showInputsForPrice && 'rotate']" class="fa-solid fa-sort-down"></i>
+              <i :id="[handleOptions.showInputsForPrice && 'rotate']" class="fa-solid fa-sort-down"></i>
             </div>
-            <div id="input" :class="[showInputsForPrice ? 'show' : 'dontShow']">
+            <div id="input" :class="[handleOptions.showInputsForPrice ? 'show' : 'dontShow']">
               <input v-model="handleOptions.minPrice" type="number" placeholder="Min" />
               <input v-model="handleOptions.maxPrice" type="number" placeholder="Max" />
               <button @click="toggleQuery">click</button>

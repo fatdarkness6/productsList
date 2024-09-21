@@ -1,6 +1,7 @@
 body {
   margin: 0;
   padding: 0;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
 }
 .wrapper {
   max-width: 1280px;
@@ -53,20 +54,23 @@ body {
 }
 .products .the-best {
   display: flex;
-  align-items: center;
   justify-content: end;
   gap: 40px;
+}
+.products .the-best h3 {
+  margin: 0;
 }
 .products .product-items {
   width: 80%;
 }
 .card {
-  border: 1px solid #4949498a;
-  box-shadow: 0px 0px 10px 1px #00000073;
+  border: 1px solid #49494950;
+  border-radius: 5px;
   width: 28%;
   display: flex;
   flex-direction: column;
   padding: 10px;
+  margin-bottom: 10px;
 }
 
 .card img {
@@ -83,12 +87,13 @@ body {
   flex-wrap: wrap;
   gap: 10px;
   justify-content: space-between;
-  margin-top: 50px;
+  margin-top: 40px;
 }
 .products .navbar {
-    border: 1px solid #000;
-    width: 18%;
+    border: 1px solid #00000049;
+    width: 20%;
     padding: 10px;
+    border-radius: 5px;
 }
 .products .navbar .intro {
   display: flex;
@@ -99,7 +104,10 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: start;
+  gap: 20px;
+  margin-top: 70px;
 }
+
 .flx {
   display: flex;
   justify-content: space-between;
@@ -134,7 +142,7 @@ body {
 .color {
   cursor: pointer;
 }
-.part3 i {
+.part3 .flx i {
   transform: rotate(90deg);
   transition: all 0.4s;
 }
@@ -142,6 +150,34 @@ body {
   transform: rotate(0deg);
 }
 #divStyle {
-  transition: all 0.5s;
+  transition: all 0.2s;
+  overflow: hidden;
 }
-
+.p2 {
+  height: 30px;
+}
+.intro button {
+  background-color: #0000001d;
+  border: none;
+  border-radius: 10px;
+  padding: 10px;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+.intro button:hover {
+  background-color: #0000002e;
+}
+.intro button h4 {
+  padding: 0;
+  margin: 0;
+  color: red;
+}
+.redBorder {
+  padding-bottom: 10px;
+  border-bottom: 4px solid rgb(210, 47, 47);
+  color: rgb(210, 47, 47);
+}
+.products .part2 h3 {
+  color: #4141419c;
+  font-size: 17px;
+}
