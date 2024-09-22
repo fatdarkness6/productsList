@@ -10,95 +10,94 @@ let infoValue = ref([]);
 let img = ref([]);
 let options = ref([]);
 let handleOptions = ref({
-  itemsIsExistInput : false,
-  minPrice : null,
-  maxPrice : null,
-  setQueryOptions : {},
-  submitQuery:false,
-  showInputsForPrice:false,
+  itemsIsExistInput: false,
+  minPrice: null,
+  maxPrice: null,
+  setQueryOptions: {},
+  submitQuery: false,
+  showInputsForPrice: false,
   loading: false
-})
-
+});
 
 let setClass = ref(false);
-
 
 const router = useRouter();
 const route = useRoute();
 
 async function productApi() {
- 
- handleOptions.value.loading = true;
-  
- 
-      await axios.get(
-      `https://demo.spreecommerce.org/api/v2/storefront/products?include=images`, {
-        params: route.query
-      }
-    ).then((response) => {
-      infoValue.value = response.data.data;
-      img.value = response.data.included;
-      options.value = response.data.meta.filters.option_types;
-    }).catch ((e) => {
-      console.log(e)
-    }).finally(() => {
-      handleOptions.value.loading = false;
-    })
-     
-  }
+  handleOptions.value.loading = true;
+
+  await axios.get(
+    `https://demo.spreecommerce.org/api/v2/storefront/products?include=images`, {
+      params: route.query
+    }
+  ).then((response) => {
+    infoValue.value = response.data.data;
+    img.value = response.data.included;
+    options.value = response.data.meta.filters.option_types;
+  }).catch((e) => {
+    console.log(e);
+  }).finally(() => {
+    handleOptions.value.loading = false;
+  });
+}
 
 function handleCheckboxChange(event) {
-  handleOptions.value.itemsIsExistInput= event.target.checked;
+  handleOptions.value.itemsIsExistInput = event.target.checked;
 }
 
 function clearFilters() {
   handleOptions.value.itemsIsExistInput = false;
   handleOptions.value.minPrice = null;
   handleOptions.value.maxPrice = null;
-  handleOptions.value.setQueryOptions = {}; 
+
+  // Reset each filter option in setQueryOptions
+  options.value.forEach(option => {
+    console.log(option.name)
+    handleOptions.value.setQueryOptions[option.name] = null; // or ''
+  });
+
   router.replace({ query: {} });
 }
+
 const toggleQuery = () => {
-  handleOptions.value.submitQuery = !handleOptions.value.submitQuery; 
+  handleOptions.value.submitQuery = !handleOptions.value.submitQuery;
 };
+
 watch(() => handleOptions.value.itemsIsExistInput, () => {
-
-  router.push({ query: { ...route.query, onlyExist: handleOptions.value.itemsIsExistInput }});
-
+  router.push({ query: { ...route.query, onlyExist: handleOptions.value.itemsIsExistInput } });
 });
-watch( () => handleOptions.value.submitQuery, () => {
- 
-  if (handleOptions.value.minPrice !== null && handleOptions.value.maxPrice !== null &&handleOptions.value.submitQuery ) {
-    let filterParams ={
-    filter : {
-      price :  `${handleOptions.value.minPrice},${handleOptions.value.maxPrice}`
-    },
-  }
-  let qqs = qs.stringify(filterParams);
+
+watch(() => handleOptions.value.submitQuery, () => {
+  if (handleOptions.value.minPrice !== null && handleOptions.value.maxPrice !== null && handleOptions.value.submitQuery) {
+    let filterParams = {
+      filter: {
+        price: `${handleOptions.value.minPrice},${handleOptions.value.maxPrice}`
+      },
+    };
+    let qqs = qs.stringify(filterParams);
     router.push(`?${qqs}`);
   }
 });
 
-watch(() => route.query, () =>  {
+watch(() => route.query, () => {
   productApi();
 });
 
-watch( handleOptions.value.setQueryOptions, () => {
+watch(handleOptions.value.setQueryOptions, () => {
   let colorOptions = {
-    filter:{
-      options:{}
+    filter: {
+      options: {}
     }
-  }
+  };
   Object.keys(handleOptions.value.setQueryOptions).forEach((key) => {
-      if (handleOptions.value.setQueryOptions[key]) {
-        colorOptions.filter.options[key] = handleOptions.value.setQueryOptions[key];
-      }
-    });
-    let qqs = qs.stringify(colorOptions);
+    if (handleOptions.value.setQueryOptions[key]) {
+      colorOptions.filter.options[key] = handleOptions.value.setQueryOptions[key];
+    }
+  });
+  let qqs = qs.stringify(colorOptions);
   router.push(`?${qqs}`);
 });
-
-
 </script>
 
 <template>
@@ -129,7 +128,6 @@ watch( handleOptions.value.setQueryOptions, () => {
             <h1 v-if="handleOptions.loading">loading...</h1>
             <h1 v-else-if="infoValue.length === 0">No products found.</h1>
             <renderProducts v-else v-for="items in infoValue" :key="items.id" :items="items" :img="img" />
-
           </div>
         </div>
         <div class="navbar">
