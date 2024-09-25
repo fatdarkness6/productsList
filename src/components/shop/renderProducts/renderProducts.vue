@@ -6,9 +6,8 @@ let props = defineProps({
 })
 
 let it = computed(() => {
-  return props.img.filter((image) => image.id === props.items?.relationships.images.data[0].id)
+  return props.img.filter((image) => image?.id == props.items?.relationships.images?.data[0]?.id)
 })
-
 </script>
 
 <template>
