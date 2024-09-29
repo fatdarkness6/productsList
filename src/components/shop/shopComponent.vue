@@ -254,7 +254,7 @@ onMounted(() => {
             <renderProducts  v-for="items in infoValue" :key="items.id" :items="items" :img="img" />
           </div>
           <h1 style="margin: 10px 0 200px 0;" v-if="handleOptions.loading">loading...</h1>
-          <h1 v-else style="margin: 10px 0 200px 0;">{{ route.query.page >= pageCountValue.total_pages ? "" : 'loadMore' }}</h1>
+          <h1 v-else style="margin: 10px 0 200px 0;">{{ route.query.page >= pageCountValue.total_pages ? "محصول دیگری وجود ندارد" : 'بارگذاری بیشتر محصولات' }}</h1>
         </div>
         <div class="navbar">
           <div class="intro">
