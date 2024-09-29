@@ -207,8 +207,6 @@ watch(handleOptions.value.setQueryOptions, () => {
       pushQuery(newQuery);
     } else {
       if (Object.keys(colorOptions.filter.options).length > 0) {
-        console.log("in else");
-
         
         const colorQuery = { filter: { options: colorOptions.filter.options } };
         let qqs = qs.stringify(colorQuery);
@@ -255,7 +253,8 @@ onMounted(() => {
           <div class="render">
             <renderProducts  v-for="items in infoValue" :key="items.id" :items="items" :img="img" />
           </div>
-          <h1 v-if="handleOptions.loading">loading...</h1>
+          <h1 style="margin: 10px 0 200px 0;" v-if="handleOptions.loading">loading...</h1>
+          <h1 v-else style="margin: 10px 0 200px 0;">{{ route.query.page >= pageCountValue.total_pages ? "" : 'loadMore' }}</h1>
         </div>
         <div class="navbar">
           <div class="intro">
@@ -295,6 +294,7 @@ onMounted(() => {
       </div>
     </div>
   </div>
+  
 </template>
 
 // quera سوالات مسابقه ای

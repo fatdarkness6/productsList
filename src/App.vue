@@ -5,6 +5,8 @@
 // import tl from './components/teleport.vue'
 // import createCardShoping from './components/cart/createCardShoping.vue'
 import shopComponentVue from './components/shop/shopComponent.vue'
+import loginPage from './routes/login/loginPage.vue';
+
 // import { ref } from 'vue'
 
 // const groceryList = ref([
@@ -19,8 +21,10 @@ import shopComponentVue from './components/shop/shopComponent.vue'
     <giveDataToComponent v-for="items of groceryList" :key="items.id" :groceryList="items" />
     <tl/> -->
   <!-- <createCardShoping/> -->
-
+  <!-- <loginPage/>
+  <-- <RouterView/> -->
   <shopComponentVue />
+
 </template>
 <!-- <style>
 .giveStyle {

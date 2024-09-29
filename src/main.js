@@ -2,13 +2,17 @@ import { createApp } from 'vue';
 import App from './App.vue';
 import { createRouter, createWebHistory } from 'vue-router';
 import shopComponent from './components/shop/shopComponent.vue';
-import './assets/main.css'
+import loginPage from './routes/login/loginPage.vue'
+import './assets/main.css';
+
+const routes = [
+  { path: '/', component: shopComponent },
+  { path: '/login', component: loginPage }
+];
 
 const router = createRouter({
   history: createWebHistory(),
-  routes: [
-    { path: '/', component: shopComponent },
-  ]
+  routes
 });
 
 const app = createApp(App);
