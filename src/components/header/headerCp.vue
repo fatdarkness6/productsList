@@ -2,19 +2,22 @@
 
 <template>
   <div class="header">
+    <div class="header-option">
+      <div class="shopping-cart flex-style-header">
+        <h3>سبد خرید</h3>
+        <i class="fa-solid fa-cart-shopping"></i>
+      </div>
+      <div class="profile flex-style-header">
+        <h3>حساب کاربری</h3>
+        <i class="fa-solid fa-user"></i>
+      </div>
+    </div>
     <div class="searchInput">
       <i class="fa-solid fa-magnifying-glass"></i>
-      <input type="search" placeholder="search" />
+      <input type="search" placeholder="استیکر" />
     </div>
-    <div class="header-option">
-      <div class="profile flex-style-header">
-        <i class="fa-solid fa-user"></i>
-        <h3>profile</h3>
-      </div>
-      <div class="shopping-cart flex-style-header">
-        <i class="fa-solid fa-cart-shopping"></i>
-        <h3>shopping cart</h3>
-      </div>
+    <div class="headerImg">
+      <img src="../../../public/Untitled-removebg-preview.png"/>
     </div>
   </div>
 </template>

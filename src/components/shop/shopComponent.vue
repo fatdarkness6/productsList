@@ -7,8 +7,10 @@ import axios from 'axios';
 import qs from 'qs';
 
 let infoValue = ref([]);
+let pageCountValue = ref({});
 let img = ref([]);
 let options = ref([]);
+let setClass = ref(false);
 let handleOptions = ref({
   itemsIsExistInput: false,
   minPrice: null,
@@ -18,10 +20,10 @@ let handleOptions = ref({
   showInputsForPrice: false,
   loading: false,
   page:1,
-  sortBy:""
+  sortBy:"",
+  updateClearFilter: 1,
 });
 
-let setClass = ref(false);
 
 const router = useRouter();
 const route = useRoute();
@@ -36,17 +38,10 @@ async function productApi() {
   ).then((response) => {
     const newProducts = response.data.data;
     const newImagesProducts = response.data.included;
-
-      // Append new products to the existing list
-      if(route.query["filter[options][color]"] || route.query["filter[price]"] || route.query.onlyExist || Object.keys(route.query).length === 0 ) {
-        infoValue.value = newProducts
-        img.value = newImagesProducts
-      }else {
-        infoValue.value.push(...newProducts);
-        img.value.push(...newImagesProducts);
-      }
+    pageCountValue.value = response.data.meta;
+    infoValue.value.push(...newProducts);
+    img.value.push(...newImagesProducts);
     options.value = response.data.meta.filters.option_types;
-   
   }).catch((e) => {
     console.log(e);
   }).finally(() => {
@@ -54,26 +49,21 @@ async function productApi() {
   });
 }
 
-function handleCheckboxChange(event) {
-  handleOptions.value.itemsIsExistInput = event.target.checked;
-}
-
-function clearFilters() {
-  // Clear specific filter options
+function clearFilters() { 
   handleOptions.value.itemsIsExistInput = false;
   handleOptions.value.minPrice = null;
   handleOptions.value.maxPrice = null;
-
-
   options.value.forEach(option => {
-    handleOptions.value.setQueryOptions[option.name] = null; // or ''
+    delete handleOptions.value.setQueryOptions[option.name];
   });
-
-
-  const currentQuery = { ...route.query };
-
-  router.push({ query: currentQuery });
+  let q = Object.keys(route.query);
+  if(q.length >= 1 && route.query.page > 1) {
+    handleOptions.value.page = 1;
+    clearArray()
+  }
+    ++handleOptions.value.updateClearFilter
 }
+
 
 const toggleQuery = () => {
   handleOptions.value.submitQuery = !handleOptions.value.submitQuery;
@@ -91,26 +81,55 @@ function handleScroll() {
       if(handleOptions.value.loading) {
         return
       }else {
-        if(route.query["filter[options][color]"] || route.query["filter[price]"] || route.query.onlyExist ) {
-         return
+        if(pageCountValue.value.total_count<25) {
+          return
         }else {
-          loadMore()
+          if( route.query.page >= pageCountValue.value.total_pages){
+            return
+          }else {
+            loadMore()
+          }
         }
       }
     }
-  
-}
-function page1() {
-  let filterParams = {
-        page: handleOptions.value.page
-    };
-    let qqs = qs.stringify(filterParams);
-    router.push(`?${qqs}`);
 }
 
+function clearArray() {
+  infoValue.value = [];
+  img.value = [];
+}
+
+function clearSort() {
+  router.push({ query: { ...route.query, sort: undefined } })
+  clearArray()
+}
+
+function pushQuery(props) {
+  let currentQuery = { ...route.query , ...props };
+  let qqs = qs.stringify(currentQuery);
+  router.push(`?${qqs}`);
+}
+
+watch(() => handleOptions.value.updateClearFilter, () => {
+
+  const queryKeys = Object.keys(route.query);
+
+  router.push({ query: { page: 1 } });
+  
+  if (queryKeys.length === 1 && (queryKeys[0] === 'page')) {
+    return; 
+  }else {
+    clearArray();
+  }
+});
 
 watch(() => handleOptions.value.itemsIsExistInput, () => {
-  router.push({ query: { ...route.query, onlyExist: handleOptions.value.itemsIsExistInput } });
+  
+  let filterParams = {
+      onlyExist: handleOptions.value.itemsIsExistInput
+  }
+  pushQuery(filterParams)
+  clearArray()
 });
 
 watch(() => handleOptions.value.submitQuery, () => {
@@ -120,29 +139,39 @@ watch(() => handleOptions.value.submitQuery, () => {
         price: `${handleOptions.value.minPrice},${handleOptions.value.maxPrice}`
       },
     };
-    let qqs = qs.stringify(filterParams);
-    router.push(`?${qqs}`);
+    clearArray()
+    if(route.query["filter[options][color]"] ||route.query["filter[options][size]"] || route.query.onlyExist || route.query.page &&  pageCountValue.value.total_count>25) {
+      route.query.page = 1
+      scrollTo(0 , 0)
+      if(route.query["filter[price]"]){
+        delete route.query["filter[price]"]
+        pushQuery(filterParams)
+      }else {
+        pushQuery(filterParams)
+      }
+    }else {
+      delete route.query.page
+      let qqs = qs.stringify(filterParams);
+      router.push(`?${qqs}`);
+    }
   }
 });
 
 watch(() => handleOptions.value.page , () => {
-    
     let filterParams = {
         page: `${handleOptions.value.page}`
     };
-    let newQuery = { ...route.query, ...filterParams };
-     const qqs = qs.stringify(newQuery);
-    router.push(`?${qqs}`);
+    pushQuery(filterParams)
 })
 
 watch(() => route.query, () => {
   productApi();
+  handleOptions.value.itemsIsExistInput = route.query.onlyExist === 'true';
 });
 
 watch(() => handleOptions.value.sortBy , () => {
-  router.push({query : {...route.query , sort : handleOptions.value.sortBy}})
-  infoValue.value = [];
-        img.value = [];
+  router.push(`?page=1&sort=${handleOptions.value.sortBy}`)
+  clearArray()
 })
 
 
@@ -152,23 +181,47 @@ watch(handleOptions.value.setQueryOptions, () => {
       options: {},
     }
   };
-  Object.keys(handleOptions.value.setQueryOptions).forEach((key) => {
-    if (handleOptions.value.setQueryOptions[key]) {
-      colorOptions.filter.options[key] = handleOptions.value.setQueryOptions[key];
+
+    Object.keys(handleOptions.value.setQueryOptions).forEach((key) => {
+      const value = handleOptions.value.setQueryOptions[key];
+      if (value) {
+        colorOptions.filter.options[key] = value;
+      }
+    });
+
+    clearArray();
+
+    const newQuery = { ...route.query };
+
+    if ((newQuery["filter[price]"] || newQuery.onlyExist || newQuery.page) && pageCountValue.value.total_count > 25) {
+      handleOptions.value.page = 1; 
+      scrollTo(0, 0);
+
+      delete newQuery["filter[options][color]"];
+      delete newQuery["filter[options][size]"];
+
+      Object.keys(colorOptions.filter.options).forEach((optionKey) => {
+        newQuery[`filter[options][${optionKey}]`] = colorOptions.filter.options[optionKey];
+      });
+
+      pushQuery(newQuery);
+    } else {
+      if (Object.keys(colorOptions.filter.options).length > 0) {
+        console.log("in else");
+
+        
+        const colorQuery = { filter: { options: colorOptions.filter.options } };
+        let qqs = qs.stringify(colorQuery);
+        router.push(`?page=1&${qqs}`);
+      }
     }
-  });
-  let qqs = qs.stringify(colorOptions);
-  router.push(`?${qqs}`);
 });
 
-
 onMounted(() => {
-document.addEventListener("scroll" , handleScroll)
-page1()
-scrollTo(0 , 0)
+  handleOptions.value.itemsIsExistInput = route.query.onlyExist === 'true';
+  document.addEventListener("scroll" , handleScroll)
+  scrollTo(0 , 0)
 })
-
-
 </script>
 
 <template>
@@ -178,13 +231,9 @@ scrollTo(0 , 0)
         <headerCp />
       </div>
       <div class="part2">
-        <h3>جشن مهمانی</h3>
-        <h3>کارت پستر</h3>
-        <h3>مدرسه و اداره</h3>
-        <h3>اکسسوری</h3>
-        <h3>قاب موبایل</h3>
-        <h3>لوازم خانه</h3>
-        <h3>پوشاک</h3>
+        <h3 v-for="category in ['جشن مهمانی', 'کارت پستر', 'مدرسه و اداره', 'اکسسوری', 'قاب موبایل', 'لوازم خانه', 'پوشاک']" :key="category">
+          {{ category }}
+        </h3>
       </div>
       <div class="part3">
         <div class="product-items">
@@ -192,36 +241,30 @@ scrollTo(0 , 0)
             <h3 :class="[route.query.sort == 'price' && 'redBorder']" @click="(() => {
               handleOptions.sortBy = 'price'
                router.push({ query: { ...route.query, page: 1 } })
-
             })">ارزان ترین</h3>
             <h3 :class="[route.query.sort == '-price' && 'redBorder']" @click="() => {
               handleOptions.sortBy = '-price'
                router.push({ query: { ...route.query, page: 1 } })
             } ">گران ترین</h3>
-            <h3>پر فروش ترین</h3>
-            <h3>جدید ترین</h3>
             <h3 @click="(() => {
-              infoValue.value = [];
-              img.value = [];
-              console.log(infoValue.value , img.value)
-              router.push({ query: { ...route.query, sort: undefined } })
-            })" :class="[route.query.sort !== 'price' || route.query.sort !== '-price' && 'redBorder']">پر بازدید ترین</h3>
+              handleOptions.sortBy = 'updated_at'
+              router.push({ query: { ...route.query, page: 1 } })
+            })" :class="[route.query.sort == 'updated_at' && 'redBorder']">جدید ترین</h3>
+            <h3 @click="clearSort" :class="[!route.query.sort && 'redBorder']">پر بازدید ترین</h3>
           </div>
           <div class="render">
-      
-            <!-- <h1 v-if="infoValue.length === 0">No products found.</h1> -->
             <renderProducts  v-for="items in infoValue" :key="items.id" :items="items" :img="img" />
           </div>
           <h1 v-if="handleOptions.loading">loading...</h1>
         </div>
         <div class="navbar">
           <div class="intro">
-            <h3>Filters</h3>
-            <button @click="clearFilters"><h4>Clear filters</h4></button>
+            <h3>فیلترها</h3>
+            <button @click="clearFilters"><h4>حذف فیلتر</h4></button>
           </div>
           <div class="color">
             <div @click="setClass = !setClass" class="p1 flx">
-              <h4>Color</h4>
+              <h4>رنگ ها و سایز ها</h4>
               <i :id="[setClass && 'rotate']" class="fa-solid fa-sort-down"></i>
             </div>
             <div id="divStyle" :class="[setClass ? 'p2' : 'dontShow']">
@@ -234,18 +277,18 @@ scrollTo(0 , 0)
             </div>
           </div>
           <div class="existProducts flx">
-            <h4>Exist Products</h4>
-            <input :checked="handleOptions.itemsIsExistInput" @change="handleCheckboxChange" type="checkbox" />
+            <h4>محصولات موجود</h4>
+            <input v-model="handleOptions.itemsIsExistInput"  type="checkbox" />
           </div>
           <div class="priceRange">
             <div @click="handleOptions.showInputsForPrice = !handleOptions.showInputsForPrice" class="info flx">
-              <h4>Price Range</h4>
+              <h4>رنج قیمت</h4>
               <i :id="[handleOptions.showInputsForPrice && 'rotate']" class="fa-solid fa-sort-down"></i>
             </div>
             <div id="input" :class="[handleOptions.showInputsForPrice ? 'show' : 'dontShow']">
-              <input v-model="handleOptions.minPrice" type="number" placeholder="Min" />
-              <input v-model="handleOptions.maxPrice" type="number" placeholder="Max" />
-              <button @click="toggleQuery">click</button>
+              <input v-model="handleOptions.minPrice" type="number" placeholder="حد اقل" />
+              <input v-model="handleOptions.maxPrice" type="number" placeholder="حد اکثر" />
+              <button @click="toggleQuery">اعمال فیلتر برای قیمت</button>
             </div>
           </div>
         </div>
@@ -253,3 +296,5 @@ scrollTo(0 , 0)
     </div>
   </div>
 </template>
+
+// quera سوالات مسابقه ای

@@ -11,23 +11,40 @@ body {
   display: flex;
   justify-content: space-between;
   padding: 20px 0 20px 0;
+  align-items: center;
 }
 .header h3 {
   margin: 0;
 }
 .header .searchInput {
   border: 1px solid #000;
-  width: 18%;
-  padding: 5px;
+  width: 40%;
+  padding: 10px;
+  height: 20px;
   display: flex;
   align-items: center;
   justify-content: start;
   gap: 5px;
-  border-radius: 5px;
+  border-radius: 10px;
 }
 .header .searchInput input {
   border: none;
   width: 100%;
+  direction: rtl;
+  font-size: 16px;
+}
+.header .searchInput i {
+  color: red;
+  font-size: 18px;
+}
+.header-option h3 {
+  font-size: 17px;
+}
+.header .searchInput input::placeholder {
+  color: #ff00009c;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
 }
 .header .searchInput input:focus-visible {
   outline: none;
@@ -39,10 +56,13 @@ body {
   justify-content: space-between;
   width: 20%;
 }
-
+.header img {
+  width: 200px;
+  height: 50px;
+}
 .flex-style-header {
   display: flex;
-  align-items: center;
+  align-items: end;
   gap: 10px;
 }
 .products .part2 {
@@ -59,6 +79,7 @@ body {
 }
 .products .the-best h3 {
   margin: 0;
+  cursor: pointer;
 }
 .products .product-items {
   width: 80%;
@@ -66,16 +87,26 @@ body {
 .card {
   border: 1px solid #49494950;
   border-radius: 5px;
-  width: 28%;
+  width: 300px;
   display: flex;
   flex-direction: column;
   padding: 10px;
-  margin-bottom: 10px;
 }
 
 .card img {
   width: 100%;
-  height: 200px;
+  height: 250px;
+  
+}
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Firefox */
+input[type=number] {
+  -moz-appearance: textfield;
 }
 .card .cardName-and-info {
   display: flex;
@@ -83,11 +114,10 @@ body {
   align-items: center;
 }
 .products .render {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  justify-content: space-between;
-  margin-top: 40px;
+  margin-top: 40px; 
+  display: grid;
+  grid-template-columns: auto auto auto;
+  gap: 20px;
 }
 .products .navbar {
     border: 1px solid #00000049;
@@ -127,6 +157,7 @@ body {
   align-items: center;
   justify-content: space-between;
   width: 100%;
+  cursor: pointer;
 }
 
 .dontShow {
@@ -135,11 +166,33 @@ body {
   visibility: hidden;
 }
 .show {
-  height: 50px;
+  height: 90px;
 }
 #input {
   transition: 0.5s;
   overflow: hidden;
+  display: grid;
+  grid-template-columns: auto;
+  gap: 10px;
+}
+#input input {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  height: 20px;
+  border-radius: 5px;
+  border: 1px solid #00000049;
+  padding-left: 10px;
+  padding-right: 10px;
+}
+#input button {
+  background-color: transparent;
+  color: #000;
+  transition: all 0.2s;
+  border-radius: 5px;
+  cursor: pointer;
+}
+#input button:hover {
+  background-color: #000000;
+  color: #fff;
 }
 .color {
   cursor: pointer;
@@ -182,4 +235,7 @@ body {
 .products .part2 h3 {
   color: #4141419c;
   font-size: 17px;
+}
+.existProducts.flx input {
+  cursor: pointer;
 }
