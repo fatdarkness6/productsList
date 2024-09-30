@@ -254,17 +254,17 @@ onMounted(() => {
             <renderProducts  v-for="items in infoValue" :key="items.id" :items="items" :img="img" />
           </div>
           <h1 style="margin: 10px 0 200px 0;" v-if="handleOptions.loading">loading...</h1>
-          <h1 v-else style="margin: 10px 0 200px 0;">{{ route.query.page >= pageCountValue.total_pages ? "محصول دیگری وجود ندارد" : 'بارگذاری بیشتر محصولات' }}</h1>
+          <h1 v-else style="margin: 10px 0 200px 0;">{{ route.query.page >= pageCountValue.total_pages ? "محصول دیگری وجود ندارد" : infoValue.length >0 ? 'بارگذاری بیشتر محصولات' : "" }}</h1>
         </div>
         <div class="navbar">
           <div class="intro">
-            <h3>فیلترها</h3>
             <button @click="clearFilters"><h4>حذف فیلتر</h4></button>
+            <h3>فیلترها</h3>
           </div>
           <div class="color">
             <div @click="setClass = !setClass" class="p1 flx">
-              <h4>رنگ ها و سایز ها</h4>
               <i :id="[setClass && 'rotate']" class="fa-solid fa-sort-down"></i>
+              <h4>رنگ ها و سایز ها</h4>
             </div>
             <div id="divStyle" :class="[setClass ? 'p2' : 'dontShow']">
               <select v-for="option in options" :key="option.id" v-model="handleOptions.setQueryOptions[option.name]">
@@ -276,13 +276,15 @@ onMounted(() => {
             </div>
           </div>
           <div class="existProducts flx">
+            <div class="form-check form-switch">
+              <input v-model="handleOptions.itemsIsExistInput" class="form-check-input" type="checkbox" role="switch" id="flexSwitchCheckChecked" checked>
+            </div>
             <h4>محصولات موجود</h4>
-            <input v-model="handleOptions.itemsIsExistInput"  type="checkbox" />
           </div>
           <div class="priceRange">
             <div @click="handleOptions.showInputsForPrice = !handleOptions.showInputsForPrice" class="info flx">
-              <h4>رنج قیمت</h4>
               <i :id="[handleOptions.showInputsForPrice && 'rotate']" class="fa-solid fa-sort-down"></i>
+              <h4>رنج قیمت</h4>
             </div>
             <div id="input" :class="[handleOptions.showInputsForPrice ? 'show' : 'dontShow']">
               <input v-model="handleOptions.minPrice" type="number" placeholder="حد اقل" />
