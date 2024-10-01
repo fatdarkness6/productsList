@@ -16,8 +16,8 @@ let it = computed(() => {
       <img :src="items.attributes.original_url" alt="Product Image" />
     </div>
     <div class="cardName-and-info">
+      <i class="fa-regular fa-heart"></i>
         <h3>{{ items.attributes.name }}</h3>
-        <i class="fa-regular fa-heart"></i>
     </div>
     <div class="price">
         <h3>{{ items.attributes.price }} $</h3>
