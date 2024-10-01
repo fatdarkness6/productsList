@@ -109,6 +109,10 @@ function pushQuery(props) {
   let qqs = qs.stringify(currentQuery);
   router.push(`?${qqs}`);
 }
+function giveValueToTheSort(props) {
+  handleOptions.value.sortBy = props
+  router.push({ query: { ...route.query, page: 1 } })
+}
 
 watch(() => handleOptions.value.updateClearFilter, () => {
 
@@ -237,16 +241,13 @@ onMounted(() => {
         <div class="product-items">
           <div class="the-best">
             <h3 :class="[route.query.sort == 'price' && 'redBorder']" @click="(() => {
-              handleOptions.sortBy = 'price'
-               router.push({ query: { ...route.query, page: 1 } })
+              giveValueToTheSort('price')
             })">ارزان ترین</h3>
             <h3 :class="[route.query.sort == '-price' && 'redBorder']" @click="() => {
-              handleOptions.sortBy = '-price'
-               router.push({ query: { ...route.query, page: 1 } })
+              giveValueToTheSort('-price')
             } ">گران ترین</h3>
             <h3 @click="(() => {
-              handleOptions.sortBy = 'updated_at'
-              router.push({ query: { ...route.query, page: 1 } })
+              giveValueToTheSort('updated_at')
             })" :class="[route.query.sort == 'updated_at' && 'redBorder']">جدید ترین</h3>
             <h3 @click="clearSort" :class="[!route.query.sort && 'redBorder']">پر بازدید ترین</h3>
           </div>
