@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, ref, watch } from 'vue';
+import { onMounted, onUpdated, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import renderProducts from './renderProducts/renderProducts.vue';
 import headerCp from '../header/headerCp.vue';
@@ -77,7 +77,7 @@ function handleScroll() {
     const scrollHeight = window.innerHeight + window.scrollY; 
     const offsetHeight = document.body.offsetHeight; 
     const distanceToBottom = offsetHeight - scrollHeight;
-    if(distanceToBottom.toFixed(0) <= 0) {
+    if(distanceToBottom.toFixed(0) <= 1) {
       if(handleOptions.value.loading) {
         return
       }else {
@@ -100,8 +100,13 @@ function clearArray() {
 }
 
 function clearSort() {
-  router.push({ query: { ...route.query, sort: undefined } })
-  clearArray()
+  handleOptions.value.page = 1;
+  if (route.query.sort) {
+    clearFilters()
+    router.push({ query: { sort : undefined , page: 1 } }).then(() => {
+      clearArray(); 
+    });
+  }
 }
 
 function pushQuery(props) {
@@ -110,8 +115,9 @@ function pushQuery(props) {
   router.push(`?${qqs}`);
 }
 function giveValueToTheSort(props) {
+  clearFilters()
   handleOptions.value.sortBy = props
-  router.push({ query: { ...route.query, page: 1 } })
+  router.push({ query: { page: 1 } })
 }
 
 watch(() => handleOptions.value.updateClearFilter, () => {
@@ -161,6 +167,14 @@ watch(() => handleOptions.value.submitQuery, () => {
   }
 });
 
+watch(() => route.query?.filter?.price, (newPrice) => {
+  if (newPrice) {
+    const [minPrice, maxPrice] = newPrice.split(',').map(Number);
+    handleOptions.value.minPrice = minPrice;
+    handleOptions.value.maxPrice = maxPrice;
+  }
+});
+
 watch(() => handleOptions.value.page , () => {
     let filterParams = {
         page: `${handleOptions.value.page}`
@@ -168,12 +182,36 @@ watch(() => handleOptions.value.page , () => {
     pushQuery(filterParams)
 })
 
+
+
 watch(() => route.query, () => {
+  let replaceS = route.query['filter[price]'];
+
+if (typeof replaceS === 'string') {
+  const priceArray = replaceS.split(',');
+
+  if (priceArray.length === 2) {
+    
+    const minPrice = parseInt(priceArray[0]);
+    const maxPrice = parseInt(priceArray[1]);
+ 
+    handleOptions.value.minPrice = minPrice;
+    handleOptions.value.maxPrice = maxPrice;
+  } else {
+    const price = parseInt(priceArray[0], 10);
+    console.log('Price:', price);
+    handleOptions.value.minPrice = price; 
+  }
+} 
+
   productApi();
   handleOptions.value.itemsIsExistInput = route.query.onlyExist === 'true';
 });
 
+
+
 watch(() => handleOptions.value.sortBy , () => {
+
   router.push(`?page=1&sort=${handleOptions.value.sortBy}`)
   clearArray()
 })
@@ -221,8 +259,12 @@ watch(handleOptions.value.setQueryOptions, () => {
 
 onMounted(() => {
   handleOptions.value.itemsIsExistInput = route.query.onlyExist === 'true';
+  
   document.addEventListener("scroll" , handleScroll)
   scrollTo(0 , 0)
+})
+onUpdated(() => {
+  
 })
 </script>
 
