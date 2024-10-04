@@ -1,10 +1,11 @@
 <script setup>
-import { onMounted, onUpdated, ref, watch } from 'vue';
+import { onMounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import renderProducts from './renderProducts/renderProducts.vue';
 import headerCp from '../header/headerCp.vue';
 import axios from 'axios';
 import qs from 'qs';
+import _ from 'lodash';
 
 let infoValue = ref([]);
 let pageCountValue = ref({});
@@ -48,7 +49,7 @@ async function productApi() {
     handleOptions.value.loading = false;
   });
 }
-
+ 
 function clearFilters() { 
   handleOptions.value.itemsIsExistInput = false;
   handleOptions.value.minPrice = null;
@@ -110,10 +111,13 @@ function clearSort() {
 }
 
 function pushQuery(props) {
-  let currentQuery = { ...route.query , ...props };
+  let qqs1 = qs.parse(location.search, { ignoreQueryPrefix: true });
+   
+  let currentQuery = _.merge(qqs1, props)
   let qqs = qs.stringify(currentQuery);
   router.push(`?${qqs}`);
 }
+
 function giveValueToTheSort(props) {
   clearFilters()
   handleOptions.value.sortBy = props
@@ -136,7 +140,10 @@ watch(() => handleOptions.value.updateClearFilter, () => {
 watch(() => handleOptions.value.itemsIsExistInput, () => {
   
   let filterParams = {
-      onlyExist: handleOptions.value.itemsIsExistInput
+    filter: {
+        in_stock: handleOptions.value.itemsIsExistInput
+      },
+      
   }
   pushQuery(filterParams)
   clearArray()
@@ -205,7 +212,7 @@ if (typeof replaceS === 'string') {
 } 
 
   productApi();
-  handleOptions.value.itemsIsExistInput = route.query.onlyExist === 'true';
+  // handleOptions.value.itemsIsExistInput = route.query.in_stock === 'true';
 });
 
 
@@ -235,7 +242,7 @@ watch(handleOptions.value.setQueryOptions, () => {
 
     const newQuery = { ...route.query };
 
-    if ((newQuery["filter[price]"] || newQuery.onlyExist || newQuery.page) && pageCountValue.value.total_count > 25) {
+    if ((newQuery["filter[price]"] || newQuery.in_stock || newQuery.page) && pageCountValue.value.total_count > 25) {
       handleOptions.value.page = 1; 
       scrollTo(0, 0);
 
@@ -258,13 +265,10 @@ watch(handleOptions.value.setQueryOptions, () => {
 });
 
 onMounted(() => {
-  handleOptions.value.itemsIsExistInput = route.query.onlyExist === 'true';
-  
+  handleOptions.value.itemsIsExistInput = route.query.in_stock === 'true';
   document.addEventListener("scroll" , handleScroll)
   scrollTo(0 , 0)
-})
-onUpdated(() => {
-  
+  productApi();
 })
 </script>
 
@@ -273,11 +277,6 @@ onUpdated(() => {
     <div class="wrapper">
       <div class="part1">
         <headerCp />
-      </div>
-      <div class="part2">
-        <h3 v-for="category in ['جشن مهمانی', 'کارت پستر', 'مدرسه و اداره', 'اکسسوری', 'قاب موبایل', 'لوازم خانه', 'پوشاک']" :key="category">
-          {{ category }}
-        </h3>
       </div>
       <div class="part3">
         <div class="product-items">
@@ -301,7 +300,7 @@ onUpdated(() => {
         </div>
         <div class="navbar">
           <div class="intro">
-            <button @click="clearFilters"><h4>حذف فیلتر</h4></button>
+            <button  @click="clearFilters"><h4 class="redColor">حذف فیلتر</h4></button>
             <h3>فیلترها</h3>
           </div>
           <div class="color">
