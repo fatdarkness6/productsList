@@ -1,56 +1,55 @@
 <script setup>
-import { computed, ref } from 'vue'
-let props = defineProps({
+import { ref } from 'vue';
+
+// Define the props for the component
+const props = defineProps({
   items: Object,
   img: Object,
-})
+});
 
-let dsButton = ref(false)
-let getDataFromLocalStorage = ref(JSON.parse(localStorage.getItem('product')) || []);
+// Reactive references
+const dsButton = ref(false);
+const getDataFromLocalStorage = ref(JSON.parse(localStorage.getItem('product')) || []);
 
+// Find the image that matches the product
+const productImage = props.img.find(image => image?.id === props.items?.relationships.images?.data[0]?.id);
 
-let it = props.img.find((image) => image?.id == props.items?.relationships.images?.data[0]?.id)
+// Add product to localStorage
+function addProductToLocalStorage(product) {
+  const storedProducts = JSON.parse(localStorage.getItem("product")) || [];
 
+  // Set the button to disabled after adding
+  dsButton.value = true;
 
-function addProductToLocalHost(product) {
-  let storedProducts = localStorage.getItem("product");
-  let productsArray = JSON.parse(storedProducts);
-    
-    dsButton.value = true
-    if (storedProducts) {
-      console.log(product)
-        product["img"] = it.attributes.original_url
-        product["numberOfProducts"] = 1
-              productsArray.push(product);
-              localStorage.setItem("product", JSON.stringify(productsArray));
-        } else {
-            product["img"] = it.attributes.original_url
-              localStorage.setItem("product", JSON.stringify([product]));
-        }
+  // Add image URL and initialize product count
+  product.img = productImage?.attributes.original_url || '';
+  product.numberOfProducts = 1;
+
+  // Add product to localStorage
+  storedProducts.push(product);
+  localStorage.setItem("product", JSON.stringify(storedProducts));
 }
-let console1 = computed(() => {
-  return getDataFromLocalStorage.value.filter((pr) => {
-    if(pr.id == props.items.id) {
-      dsButton.value = true
-    }
-  })
-})
-console.log(console1.value)
+
+// Check if the product is already in localStorage and disable the button
+getDataFromLocalStorage.value.forEach(pr => {
+  if (pr.id === props.items.id) {
+    dsButton.value = true;
+  }
+});
 </script>
 
 <template>
   <div class="card">
-      <img :src="it?.attributes.original_url" alt="Product Image" />
+    <img :src="productImage?.attributes.original_url" alt="Product Image" />
     <div class="cardName-and-info">
       <i class="fa-regular fa-heart"></i>
-        <h3>{{ items.attributes.name }}</h3>
+      <h3>{{ items.attributes.name }}</h3>
     </div>
     <div class="price">
-        <h3>{{ items.attributes.price }} $</h3>
-        <button :disabled="dsButton" @click="addProductToLocalHost(items)" class="add-to-cart">
-          <h3>اضافه کردن به سبد خرید</h3>
-          <span></span>
-        </button>
+      <h3>{{ items.attributes.price }} $</h3>
+      <button  :disabled="dsButton" @click="addProductToLocalStorage(items)" :class="[dsButton ? 'add-to-cart-dsb' : 'add-to-cart']">
+        <h3>اضافه کردن به سبد خرید</h3>
+      </button>
     </div>
   </div>
 </template>

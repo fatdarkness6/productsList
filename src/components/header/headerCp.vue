@@ -12,7 +12,7 @@ let dataLength = ref(getDataFromLocalStorage.value?.length)
   <div class="father">
       <div class="header">
       <div class="header-option">
-        <RouterLink to="/shoppingCart" class="shopping-cart flex-style-header">
+        <RouterLink to="/shoppingCart" class="shopping-cart flex-style-header textColor">
           <h3>سبد خرید</h3>
           <div class="length-of-cart">
             <i class="fa-solid fa-cart-shopping"></i>
@@ -21,7 +21,7 @@ let dataLength = ref(getDataFromLocalStorage.value?.length)
             </div>
           </div>
         </RouterLink>
-        <div class="profile flex-style-header">
+        <div class="profile flex-style-header textColor">
           <h3>حساب کاربری</h3>
           <i class="fa-solid fa-user"></i>
         </div>
@@ -35,7 +35,7 @@ let dataLength = ref(getDataFromLocalStorage.value?.length)
       </div>
     </div>
     <div class="part2">
-        <h3 v-for="category in ['جشن مهمانی', 'کارت پستر', 'مدرسه و اداره', 'اکسسوری', 'قاب موبایل', 'لوازم خانه', 'پوشاک']" :key="category">
+        <h3  v-for="category in ['جشن مهمانی', 'کارت پستر', 'مدرسه و اداره', 'اکسسوری', 'قاب موبایل', 'لوازم خانه', 'پوشاک']" :key="category">
           {{ category }}
         </h3>
       </div>

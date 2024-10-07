@@ -20,6 +20,7 @@ let handleOptions = ref({
   submitQuery: false,
   showInputsForPrice: false,
   loading: false,
+  recognizeSort: false,
   page:1,
   sortBy:"",
   updateClearFilter: 1,
@@ -59,6 +60,7 @@ function clearFilters() {
   });
   let q = Object.keys(route.query);
   if(q.length >= 1 && route.query.page > 1) {
+    console.log("console.log()")
     handleOptions.value.page = 1;
     clearArray()
   }
@@ -70,9 +72,11 @@ const toggleQuery = () => {
   handleOptions.value.submitQuery = !handleOptions.value.submitQuery;
 };
 
+
 function loadMore() {
   ++handleOptions.value.page
 }
+
 
 function handleScroll() {
     const scrollHeight = window.innerHeight + window.scrollY; 
@@ -95,6 +99,7 @@ function handleScroll() {
     }
 }
 
+
 function clearArray() {
   infoValue.value = [];
   img.value = [];
@@ -102,40 +107,61 @@ function clearArray() {
 
 function clearSort() {
   handleOptions.value.page = 1;
+  handleOptions.value.recognizeSort = true
   if (route.query.sort) {
     clearFilters()
-    router.push({ query: { sort : undefined , page: 1 } }).then(() => {
-      clearArray(); 
-    });
+    router.push(`?page=1`)
+    console.log("bbbt")
+    clearArray(); 
   }
 }
-
+function prQuery() {
+  return qs.parse(location.search, { ignoreQueryPrefix: true });
+}
 function pushQuery(props) {
-  let qqs1 = qs.parse(location.search, { ignoreQueryPrefix: true });
+  let qqs1 = prQuery();
    
   let currentQuery = _.merge(qqs1, props)
   let qqs = qs.stringify(currentQuery);
   router.push(`?${qqs}`);
 }
 
+
 function giveValueToTheSort(props) {
-  clearFilters()
-  handleOptions.value.sortBy = props
-  router.push({ query: { page: 1 } })
+  if(handleOptions.value.loading) {
+    return
+  }else {
+    clearFilters()
+    handleOptions.value.sortBy = props
+    router.push({ query: { page: 1 } })
+  }
+  
 }
 
-watch(() => handleOptions.value.updateClearFilter, () => {
 
-  const queryKeys = Object.keys(route.query);
+watch([() => handleOptions.value.updateClearFilter , handleOptions.value.recognizeSort], () => {
 
-  router.push({ query: { page: 1 } });
+  let parseQuery = qs.parse(location.search, { ignoreQueryPrefix: true })
   
-  if (queryKeys.length === 1 && (queryKeys[0] === 'page')) {
+  if(handleOptions.value.recognizeSort) {
+    router.push(`?page=1`);
+  }else {
+    if(parseQuery.sort) {
+      router.push(`?page=1&sort=${parseQuery.sort}`);
+    }else {
+      router.push(`?page=1`);
+    }
+  }
+  
+  
+  if ((parseQuery.sort || parseQuery.page)) {
     return; 
   }else {
+    console.log("console")
     clearArray();
   }
 });
+
 
 watch(() => handleOptions.value.itemsIsExistInput, () => {
   
@@ -149,6 +175,7 @@ watch(() => handleOptions.value.itemsIsExistInput, () => {
   clearArray()
 });
 
+
 watch(() => handleOptions.value.submitQuery, () => {
   if (handleOptions.value.minPrice !== null && handleOptions.value.maxPrice !== null && handleOptions.value.submitQuery) {
     let filterParams = {
@@ -157,19 +184,25 @@ watch(() => handleOptions.value.submitQuery, () => {
       },
     };
     clearArray()
-    if(route.query["filter[options][color]"] ||route.query["filter[options][size]"] || route.query.onlyExist || route.query.page &&  pageCountValue.value.total_count>25) {
+    let parseQuery = prQuery()
+    if(parseQuery?.filter?.options?.color ||parseQuery?.filter?.options?.size || parseQuery?.filter?.options?.in_stock || parseQuery?.page &&  pageCountValue.value.total_count>25) {
+      
       route.query.page = 1
       scrollTo(0 , 0)
-      if(route.query["filter[price]"]){
-        delete route.query["filter[price]"]
+
+      if(parseQuery?.filter?.price){
+        delete parseQuery.filter.price
         pushQuery(filterParams)
       }else {
         pushQuery(filterParams)
       }
+
     }else {
-      delete route.query.page
-      let qqs = qs.stringify(filterParams);
-      router.push(`?${qqs}`);
+
+      // delete route.query.page
+      // let qqs = qs.stringify(filterParams);
+      // router.push(`?${qqs}`);
+      console.log("err in 194")
     }
   }
 });
@@ -194,6 +227,8 @@ watch(() => handleOptions.value.page , () => {
 watch(() => route.query, () => {
   let replaceS = route.query['filter[price]'];
 
+  qs.parse(location.search, { ignoreQueryPrefix: true })
+  
 if (typeof replaceS === 'string') {
   const priceArray = replaceS.split(',');
 
@@ -206,7 +241,6 @@ if (typeof replaceS === 'string') {
     handleOptions.value.maxPrice = maxPrice;
   } else {
     const price = parseInt(priceArray[0], 10);
-    console.log('Price:', price);
     handleOptions.value.minPrice = price; 
   }
 } 
@@ -231,37 +265,42 @@ watch(handleOptions.value.setQueryOptions, () => {
     }
   };
 
-    Object.keys(handleOptions.value.setQueryOptions).forEach((key) => {
-      const value = handleOptions.value.setQueryOptions[key];
-      if (value) {
-        colorOptions.filter.options[key] = value;
-      }
+  Object.keys(handleOptions.value.setQueryOptions).forEach((key) => {
+    const value = handleOptions.value.setQueryOptions[key];
+    if (value) {
+      colorOptions.filter.options[key] = value;
+    }
+  });
+
+  clearArray();
+
+  let parseQuery = prQuery()
+
+  if (!parseQuery.filter) {
+    parseQuery.filter = {};
+  }
+  if (!parseQuery.filter.options) {
+    parseQuery.filter.options = {};
+  }
+
+  if ((parseQuery.filter?.price || parseQuery.filter?.in_stock) && pageCountValue.value.total_count > 25) {
+    handleOptions.value.page = 1;
+    scrollTo(0, 0);
+
+    parseQuery.filter.options.color = null;
+    parseQuery.filter.options.size = null;
+
+    Object.keys(colorOptions.filter.options).forEach((optionKey) => {
+      parseQuery.filter.options[optionKey] = colorOptions.filter.options[optionKey];
     });
 
-    clearArray();
+    pushQuery(parseQuery);
 
-    const newQuery = { ...route.query };
-
-    if ((newQuery["filter[price]"] || newQuery.in_stock || newQuery.page) && pageCountValue.value.total_count > 25) {
-      handleOptions.value.page = 1; 
-      scrollTo(0, 0);
-
-      delete newQuery["filter[options][color]"];
-      delete newQuery["filter[options][size]"];
-
-      Object.keys(colorOptions.filter.options).forEach((optionKey) => {
-        newQuery[`filter[options][${optionKey}]`] = colorOptions.filter.options[optionKey];
-      });
-
-      pushQuery(newQuery);
-    } else {
-      if (Object.keys(colorOptions.filter.options).length > 0) {
-        
-        const colorQuery = { filter: { options: colorOptions.filter.options } };
-        let qqs = qs.stringify(colorQuery);
-        router.push(`?page=1&${qqs}`);
-      }
+  } else {
+    if (Object.keys(colorOptions.filter.options).length > 0) {
+      pushQuery(colorOptions);
     }
+  }
 });
 
 onMounted(() => {
@@ -281,15 +320,15 @@ onMounted(() => {
       <div class="part3">
         <div class="product-items">
           <div class="the-best">
-            <h3 :class="[route.query.sort == 'price' && 'redBorder']" @click="(() => {
+            <h3 :class="[route.query.sort == 'price' ? 'redBorder' : 'textColor']" @click="(() => {
               giveValueToTheSort('price')
             })">ارزان ترین</h3>
-            <h3 :class="[route.query.sort == '-price' && 'redBorder']" @click="() => {
+            <h3 :class="[route.query.sort == '-price' ? 'redBorder' : 'textColor']" @click="() => {
               giveValueToTheSort('-price')
             } ">گران ترین</h3>
             <h3 @click="(() => {
               giveValueToTheSort('updated_at')
-            })" :class="[route.query.sort == 'updated_at' && 'redBorder']">جدید ترین</h3>
+            })" :class="[route.query.sort == 'updated_at' ? 'redBorder' : 'textColor']">جدید ترین</h3>
             <h3 @click="clearSort" :class="[!route.query.sort && 'redBorder']">پر بازدید ترین</h3>
           </div>
           <div class="render">
