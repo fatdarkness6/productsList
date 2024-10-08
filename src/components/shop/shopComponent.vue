@@ -30,9 +30,10 @@ let handleOptions = ref({
 const router = useRouter();
 const route = useRoute();
 
+// ------------------------------------------functions------------------------------------------//
+
 async function productApi() {
   handleOptions.value.loading = true; 
-
   await axios.get(
     `https://demo.spreecommerce.org/api/v2/storefront/products?include=images`, {
       params: route.query
@@ -50,21 +51,35 @@ async function productApi() {
     handleOptions.value.loading = false;
   });
 }
- 
 function clearFilters() { 
   handleOptions.value.itemsIsExistInput = false;
   handleOptions.value.minPrice = null;
   handleOptions.value.maxPrice = null;
+  
   options.value.forEach(option => {
     delete handleOptions.value.setQueryOptions[option.name];
-  });
-  let q = Object.keys(route.query);
-  if(q.length >= 1 && route.query.page > 1) {
-    console.log("console.log()")
-    handleOptions.value.page = 1;
-    clearArray()
+   });
+  clearArray();
+  let parseQuery = qs.parse(location.search, { ignoreQueryPrefix: true });
+
+  if (handleOptions.value.recognizeSort) {
+    router.push({ query: { page: 1 } });
+  } else {
+    const newQuery = { page: 1 };
+    if (parseQuery.sort) {
+      newQuery.sort = parseQuery.sort; 
+    }
+    router.push({ query: newQuery });
   }
-    ++handleOptions.value.updateClearFilter
+
+
+  if (parseQuery.filter) {
+    return; 
+  } else {
+    
+    clearArray();
+    productApi(); 
+  }
 }
 
 
@@ -106,18 +121,22 @@ function clearArray() {
 }
 
 function clearSort() {
+  if(!handleOptions.value.loading){
   handleOptions.value.page = 1;
   handleOptions.value.recognizeSort = true
-  if (route.query.sort) {
-    clearFilters()
-    router.push(`?page=1`)
-    console.log("bbbt")
-    clearArray(); 
+  
+    if (route.query.sort) {
+      clearFilters()
+      router.push(`?page=1`)
+      clearArray(); 
+    }
   }
 }
+
 function prQuery() {
   return qs.parse(location.search, { ignoreQueryPrefix: true });
 }
+
 function pushQuery(props) {
   let qqs1 = prQuery();
    
@@ -138,8 +157,29 @@ function giveValueToTheSort(props) {
   
 }
 
+function getPriceDataFromquery() {
+  let replaceS = prQuery().filter?.price;
 
-watch([() => handleOptions.value.updateClearFilter , handleOptions.value.recognizeSort], () => {
+  if (typeof replaceS === 'string') {
+  const priceArray = replaceS.split(',');
+
+  if (priceArray.length === 2) {
+    
+    const minPrice = parseInt(priceArray[0]);
+    const maxPrice = parseInt(priceArray[1]);
+ 
+    handleOptions.value.minPrice = minPrice;
+    handleOptions.value.maxPrice = maxPrice;
+  } else {
+    const price = parseInt(priceArray[0], 10);
+    handleOptions.value.minPrice = price; 
+  }
+} 
+}
+
+// ------------------------------------watchs-------------------------------------//
+
+watch([() => handleOptions.value.updateClearFilter, () => handleOptions.value.recognizeSort], () => {
 
   let parseQuery = qs.parse(location.search, { ignoreQueryPrefix: true })
   
@@ -198,10 +238,6 @@ watch(() => handleOptions.value.submitQuery, () => {
       }
 
     }else {
-
-      // delete route.query.page
-      // let qqs = qs.stringify(filterParams);
-      // router.push(`?${qqs}`);
       console.log("err in 194")
     }
   }
@@ -222,31 +258,8 @@ watch(() => handleOptions.value.page , () => {
     pushQuery(filterParams)
 })
 
-
-
 watch(() => route.query, () => {
-  let replaceS = route.query['filter[price]'];
-
-  qs.parse(location.search, { ignoreQueryPrefix: true })
-  
-if (typeof replaceS === 'string') {
-  const priceArray = replaceS.split(',');
-
-  if (priceArray.length === 2) {
-    
-    const minPrice = parseInt(priceArray[0]);
-    const maxPrice = parseInt(priceArray[1]);
- 
-    handleOptions.value.minPrice = minPrice;
-    handleOptions.value.maxPrice = maxPrice;
-  } else {
-    const price = parseInt(priceArray[0], 10);
-    handleOptions.value.minPrice = price; 
-  }
-} 
-
   productApi();
-  // handleOptions.value.itemsIsExistInput = route.query.in_stock === 'true';
 });
 
 
@@ -303,10 +316,13 @@ watch(handleOptions.value.setQueryOptions, () => {
   }
 });
 
+// ------------------------------------onMounted-------------------------------------//
+
 onMounted(() => {
   handleOptions.value.itemsIsExistInput = route.query.in_stock === 'true';
   document.addEventListener("scroll" , handleScroll)
   scrollTo(0 , 0)
+  getPriceDataFromquery()
   productApi();
 })
 </script>

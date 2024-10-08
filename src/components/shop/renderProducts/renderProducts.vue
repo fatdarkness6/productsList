@@ -20,7 +20,7 @@ function addProductToLocalStorage(product) {
 
   // Set the button to disabled after adding
   dsButton.value = true;
-
+  
   // Add image URL and initialize product count
   product.img = productImage?.attributes.original_url || '';
   product.numberOfProducts = 1;
