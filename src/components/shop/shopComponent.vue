@@ -61,7 +61,6 @@ function clearFilters() {
 
   options.value.forEach((e) => {
     handleOptions.value.setQueryOptions[e.name] = ""
-    console.log(handleOptions.value.setQueryOptions)
   })
 
   if(pr.filter && pr.sort) {
@@ -160,6 +159,7 @@ function getPriceDataFromquery() {
 } 
 }
 
+
 // ------------------------------------watchs-------------------------------------//
 
 watch([() => handleOptions.value.updateClearFilter, () => handleOptions.value.recognizeSort], () => {
@@ -236,6 +236,7 @@ watch(() => handleOptions.value.page , () => {
 watch(() => route.query, () => {
   let p = prQuery()
   handleOptions.value.itemsIsExistInput = p.filter?.in_stock;
+  Object.assign(handleOptions.value.setQueryOptions, p.filter?.options || {});
   productApi();
 });
 
@@ -267,7 +268,6 @@ watch(handleOptions.value.setQueryOptions, () => {
   if (!parseQuery.filter.options) {
     parseQuery.filter.options = {};
   }
-
   if ((parseQuery.filter?.price || parseQuery.filter?.in_stock) && pageCountValue.value.total_count > 25) {
    
     handleOptions.value.page = 1;
@@ -277,7 +277,15 @@ watch(handleOptions.value.setQueryOptions, () => {
     Object.keys(colorOptions.filter.options).forEach((optionKey) => {
       parseQuery.filter.options[optionKey] = colorOptions.filter.options[optionKey];
     });
-    pushQuery(parseQuery);
+    options.value.forEach((e) => {
+      if(handleOptions.value.setQueryOptions[e.name] == "") {
+        return
+      }else {
+        pushQuery(parseQuery);
+      }
+    
+  })
+   
   } else {
     if (Object.keys(colorOptions.filter.options).length > 0) {
       pushQuery(colorOptions);
@@ -287,6 +295,8 @@ watch(handleOptions.value.setQueryOptions, () => {
 
 // ------------------------------------onMounted-------------------------------------//
 
+
+
 onMounted(() => {
   let p = prQuery()
   handleOptions.value.itemsIsExistInput = p.filter?.in_stock === 'true';
@@ -294,6 +304,8 @@ onMounted(() => {
   scrollTo(0 , 0)
   getPriceDataFromquery()
   productApi();
+
+  Object.assign(handleOptions.value.setQueryOptions, p.filter?.options || {});
 })
 </script>
 
@@ -333,7 +345,7 @@ onMounted(() => {
               <i :id="[setClass && 'rotate']" class="fa-solid fa-sort-down"></i>
               <h4>رنگ ها و سایز ها</h4>
             </div>
-            <div id="divStyle" :class="[setClass ? 'p2' : 'dontShow']">
+            <div v-if="options.length > 0" id="divStyle" :class="[setClass ? 'p2' : 'dontShow']">
               <select v-for="option in options" :key="option.id" v-model="handleOptions.setQueryOptions[option.name]">
                 <option value="" >Select {{ option.name }}</option>
                 <option v-for="optionValue in option.option_values" :key="optionValue.id" :value="optionValue.name">
