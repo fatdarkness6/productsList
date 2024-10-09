@@ -32,6 +32,7 @@ const route = useRoute();
 
 // ------------------------------------------functions------------------------------------------//
 
+
 async function productApi() {
   handleOptions.value.loading = true; 
   await axios.get(
@@ -51,36 +52,24 @@ async function productApi() {
     handleOptions.value.loading = false;
   });
 }
+
+
 function clearFilters() { 
-  handleOptions.value.itemsIsExistInput = false;
-  handleOptions.value.minPrice = null;
-  handleOptions.value.maxPrice = null;
+  let pr = prQuery()
+  handleOptions.value.minPrice = null
+  handleOptions.value.maxPrice = null; 
+  options.value.forEach((e) => {
+    handleOptions.value.setQueryOptions[e.name] = '';
+  })
+  if(pr.filter && pr.sort) {
+    router.push(`?page=1&sort=${route.query.sort}`)
+    clearArray()
+  }else if(pr.filter) {
+    router.push(`?page=1`)
+    clearArray()
+  }
   
-  options.value.forEach(option => {
-    delete handleOptions.value.setQueryOptions[option.name];
-   });
-  clearArray();
-  let parseQuery = qs.parse(location.search, { ignoreQueryPrefix: true });
-
-  if (handleOptions.value.recognizeSort) {
-    router.push({ query: { page: 1 } });
-  } else {
-    const newQuery = { page: 1 };
-    if (parseQuery.sort) {
-      newQuery.sort = parseQuery.sort; 
-    }
-    router.push({ query: newQuery });
-  }
-
-
-  if (parseQuery.filter) {
-    return; 
-  } else {
-    
-    clearArray();
-    productApi(); 
-  }
-}
+};
 
 
 const toggleQuery = () => {
@@ -120,13 +109,12 @@ function clearArray() {
   img.value = [];
 }
 
+
 function clearSort() {
   if(!handleOptions.value.loading){
   handleOptions.value.page = 1;
   handleOptions.value.recognizeSort = true
-  
     if (route.query.sort) {
-      clearFilters()
       router.push(`?page=1`)
       clearArray(); 
     }
@@ -139,7 +127,6 @@ function prQuery() {
 
 function pushQuery(props) {
   let qqs1 = prQuery();
-   
   let currentQuery = _.merge(qqs1, props)
   let qqs = qs.stringify(currentQuery);
   router.push(`?${qqs}`);
@@ -150,24 +137,18 @@ function giveValueToTheSort(props) {
   if(handleOptions.value.loading) {
     return
   }else {
-    clearFilters()
     handleOptions.value.sortBy = props
-    router.push({ query: { page: 1 } })
   }
   
 }
 
 function getPriceDataFromquery() {
   let replaceS = prQuery().filter?.price;
-
   if (typeof replaceS === 'string') {
   const priceArray = replaceS.split(',');
-
   if (priceArray.length === 2) {
-    
     const minPrice = parseInt(priceArray[0]);
     const maxPrice = parseInt(priceArray[1]);
- 
     handleOptions.value.minPrice = minPrice;
     handleOptions.value.maxPrice = maxPrice;
   } else {
@@ -180,9 +161,7 @@ function getPriceDataFromquery() {
 // ------------------------------------watchs-------------------------------------//
 
 watch([() => handleOptions.value.updateClearFilter, () => handleOptions.value.recognizeSort], () => {
-
   let parseQuery = qs.parse(location.search, { ignoreQueryPrefix: true })
-  
   if(handleOptions.value.recognizeSort) {
     router.push(`?page=1`);
   }else {
@@ -192,8 +171,6 @@ watch([() => handleOptions.value.updateClearFilter, () => handleOptions.value.re
       router.push(`?page=1`);
     }
   }
-  
-  
   if ((parseQuery.sort || parseQuery.page)) {
     return; 
   }else {
@@ -203,13 +180,11 @@ watch([() => handleOptions.value.updateClearFilter, () => handleOptions.value.re
 });
 
 
-watch(() => handleOptions.value.itemsIsExistInput, () => {
-  
+watch(() => handleOptions.value.itemsIsExistInput, () => {  
   let filterParams = {
     filter: {
         in_stock: handleOptions.value.itemsIsExistInput
       },
-      
   }
   pushQuery(filterParams)
   clearArray()
@@ -226,22 +201,20 @@ watch(() => handleOptions.value.submitQuery, () => {
     clearArray()
     let parseQuery = prQuery()
     if(parseQuery?.filter?.options?.color ||parseQuery?.filter?.options?.size || parseQuery?.filter?.options?.in_stock || parseQuery?.page &&  pageCountValue.value.total_count>25) {
-      
       route.query.page = 1
       scrollTo(0 , 0)
-
       if(parseQuery?.filter?.price){
         delete parseQuery.filter.price
         pushQuery(filterParams)
       }else {
         pushQuery(filterParams)
       }
-
     }else {
       console.log("err in 194")
     }
   }
 });
+
 
 watch(() => route.query?.filter?.price, (newPrice) => {
   if (newPrice) {
@@ -251,6 +224,7 @@ watch(() => route.query?.filter?.price, (newPrice) => {
   }
 });
 
+
 watch(() => handleOptions.value.page , () => {
     let filterParams = {
         page: `${handleOptions.value.page}`
@@ -259,13 +233,14 @@ watch(() => handleOptions.value.page , () => {
 })
 
 watch(() => route.query, () => {
+  let p = prQuery()
+  handleOptions.value.itemsIsExistInput = p.filter?.in_stock;
   productApi();
 });
 
 
 
 watch(() => handleOptions.value.sortBy , () => {
-
   router.push(`?page=1&sort=${handleOptions.value.sortBy}`)
   clearArray()
 })
@@ -277,18 +252,14 @@ watch(handleOptions.value.setQueryOptions, () => {
       options: {},
     }
   };
-
   Object.keys(handleOptions.value.setQueryOptions).forEach((key) => {
     const value = handleOptions.value.setQueryOptions[key];
     if (value) {
       colorOptions.filter.options[key] = value;
     }
   });
-
   clearArray();
-
   let parseQuery = prQuery()
-
   if (!parseQuery.filter) {
     parseQuery.filter = {};
   }
@@ -297,20 +268,18 @@ watch(handleOptions.value.setQueryOptions, () => {
   }
 
   if ((parseQuery.filter?.price || parseQuery.filter?.in_stock) && pageCountValue.value.total_count > 25) {
+    console.log("err in 289")
     handleOptions.value.page = 1;
     scrollTo(0, 0);
-
     parseQuery.filter.options.color = null;
-    parseQuery.filter.options.size = null;
 
     Object.keys(colorOptions.filter.options).forEach((optionKey) => {
       parseQuery.filter.options[optionKey] = colorOptions.filter.options[optionKey];
     });
-
     pushQuery(parseQuery);
-
   } else {
     if (Object.keys(colorOptions.filter.options).length > 0) {
+      console.log("babam")
       pushQuery(colorOptions);
     }
   }
@@ -319,7 +288,8 @@ watch(handleOptions.value.setQueryOptions, () => {
 // ------------------------------------onMounted-------------------------------------//
 
 onMounted(() => {
-  handleOptions.value.itemsIsExistInput = route.query.in_stock === 'true';
+  let p = prQuery()
+  handleOptions.value.itemsIsExistInput = p.filter?.in_stock === 'true';
   document.addEventListener("scroll" , handleScroll)
   scrollTo(0 , 0)
   getPriceDataFromquery()
@@ -355,7 +325,7 @@ onMounted(() => {
         </div>
         <div class="navbar">
           <div class="intro">
-            <button  @click="clearFilters"><h4 class="redColor">حذف فیلتر</h4></button>
+            <button @click="clearFilters"><h4 class="redColor">حذف فیلتر</h4></button>
             <h3>فیلترها</h3>
           </div>
           <div class="color">
@@ -365,7 +335,7 @@ onMounted(() => {
             </div>
             <div id="divStyle" :class="[setClass ? 'p2' : 'dontShow']">
               <select v-for="option in options" :key="option.id" v-model="handleOptions.setQueryOptions[option.name]">
-                <option value="">Select {{ option.name }}</option>
+                <option value="" disabled selected   >Select {{ option.name }}</option>
                 <option v-for="optionValue in option.option_values" :key="optionValue.id" :value="optionValue.name">
                   {{ optionValue.name }}
                 </option>
