@@ -58,9 +58,12 @@ function clearFilters() {
   let pr = prQuery()
   handleOptions.value.minPrice = null
   handleOptions.value.maxPrice = null; 
+
   options.value.forEach((e) => {
-    handleOptions.value.setQueryOptions[e.name] = '';
+    handleOptions.value.setQueryOptions[e.name] = ""
+    console.log(handleOptions.value.setQueryOptions)
   })
+
   if(pr.filter && pr.sort) {
     router.push(`?page=1&sort=${route.query.sort}`)
     clearArray()
@@ -68,7 +71,6 @@ function clearFilters() {
     router.push(`?page=1`)
     clearArray()
   }
-  
 };
 
 
@@ -174,7 +176,6 @@ watch([() => handleOptions.value.updateClearFilter, () => handleOptions.value.re
   if ((parseQuery.sort || parseQuery.page)) {
     return; 
   }else {
-    console.log("console")
     clearArray();
   }
 });
@@ -210,7 +211,7 @@ watch(() => handleOptions.value.submitQuery, () => {
         pushQuery(filterParams)
       }
     }else {
-      console.log("err in 194")
+      console.log("214")
     }
   }
 });
@@ -268,7 +269,7 @@ watch(handleOptions.value.setQueryOptions, () => {
   }
 
   if ((parseQuery.filter?.price || parseQuery.filter?.in_stock) && pageCountValue.value.total_count > 25) {
-    console.log("err in 289")
+   
     handleOptions.value.page = 1;
     scrollTo(0, 0);
     parseQuery.filter.options.color = null;
@@ -279,7 +280,6 @@ watch(handleOptions.value.setQueryOptions, () => {
     pushQuery(parseQuery);
   } else {
     if (Object.keys(colorOptions.filter.options).length > 0) {
-      console.log("babam")
       pushQuery(colorOptions);
     }
   }
@@ -335,7 +335,7 @@ onMounted(() => {
             </div>
             <div id="divStyle" :class="[setClass ? 'p2' : 'dontShow']">
               <select v-for="option in options" :key="option.id" v-model="handleOptions.setQueryOptions[option.name]">
-                <option value="" disabled selected   >Select {{ option.name }}</option>
+                <option value="" >Select {{ option.name }}</option>
                 <option v-for="optionValue in option.option_values" :key="optionValue.id" :value="optionValue.name">
                   {{ optionValue.name }}
                 </option>
