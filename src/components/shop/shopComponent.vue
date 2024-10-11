@@ -58,16 +58,14 @@ function clearFilters() {
   let pr = prQuery()
   handleOptions.value.minPrice = null
   handleOptions.value.maxPrice = null; 
-
-  options.value.forEach((e) => {
-    handleOptions.value.setQueryOptions[e.name] = ""
-  })
-
+  Object.assign(handleOptions.value.setQueryOptions, pr.filter?.options || {})
+  
   if(pr.filter && pr.sort) {
     router.push(`?page=1&sort=${route.query.sort}`)
     clearArray()
   }else if(pr.filter) {
     router.push(`?page=1`)
+    handleOptions.value.page = 1
     clearArray()
   }
 };
@@ -111,20 +109,12 @@ function clearArray() {
 }
 
 
-function clearSort() {
-  if(!handleOptions.value.loading){
-  handleOptions.value.page = 1;
-  handleOptions.value.recognizeSort = true
-    if (route.query.sort) {
-      router.push(`?page=1`)
-      clearArray(); 
-    }
-  }
-}
+
 
 function prQuery() {
   return qs.parse(location.search, { ignoreQueryPrefix: true });
 }
+
 
 function pushQuery(props) {
   let qqs1 = prQuery();
@@ -134,13 +124,10 @@ function pushQuery(props) {
 }
 
 
-function giveValueToTheSort(props) {
-  if(handleOptions.value.loading) {
-    return
-  }else {
-    handleOptions.value.sortBy = props
+function giveValueToTheSort(sortOption) {
+  if (!handleOptions.value.loading) {
+    handleOptions.value.sortBy = sortOption;  // This triggers the watcher
   }
-  
 }
 
 function getPriceDataFromquery() {
@@ -162,33 +149,20 @@ function getPriceDataFromquery() {
 
 // ------------------------------------watchs-------------------------------------//
 
-watch([() => handleOptions.value.updateClearFilter, () => handleOptions.value.recognizeSort], () => {
-  let parseQuery = qs.parse(location.search, { ignoreQueryPrefix: true })
-  if(handleOptions.value.recognizeSort) {
-    router.push(`?page=1`);
-  }else {
-    if(parseQuery.sort) {
-      router.push(`?page=1&sort=${parseQuery.sort}`);
-    }else {
-      router.push(`?page=1`);
-    }
-  }
-  if ((parseQuery.sort || parseQuery.page)) {
-    return; 
-  }else {
-    clearArray();
-  }
-});
 
-
-watch(() => handleOptions.value.itemsIsExistInput, () => {  
+watch(() => handleOptions.value.itemsIsExistInput, () => {
   let filterParams = {
     filter: {
-        in_stock: handleOptions.value.itemsIsExistInput
-      },
+      in_stock: handleOptions.value.itemsIsExistInput
+    },
+  };
+  
+  // Clear the array only if it's a new filter being applied.
+  if (handleOptions.value.page === 1) {
+
+    clearArray();  // This clears the products only when the filter changes
   }
-  pushQuery(filterParams)
-  clearArray()
+  pushQuery(filterParams);
 });
 
 
@@ -226,12 +200,14 @@ watch(() => route.query?.filter?.price, (newPrice) => {
 });
 
 
-watch(() => handleOptions.value.page , () => {
-    let filterParams = {
-        page: `${handleOptions.value.page}`
-    };
-    pushQuery(filterParams)
-})
+watch(() => handleOptions.value.page, () => {
+
+  let filterParams = {
+    page: Number(handleOptions.value.page),
+  };
+
+  pushQuery(filterParams);
+});
 
 watch(() => route.query, () => {
   let p = prQuery()
@@ -242,13 +218,23 @@ watch(() => route.query, () => {
 
 
 
-watch(() => handleOptions.value.sortBy , () => {
-  router.push(`?page=1&sort=${handleOptions.value.sortBy}`)
-  clearArray()
-})
+watch(() => handleOptions.value.sortBy, (newVal) => {
+  if (!handleOptions.value.loading) {
+    // Clear products and update the query for sorting
+    let queryParams = { ...route.query, page: 1 };  // Always reset to page 1
+    if (newVal === 'home') {
+      delete queryParams.sort;  // Remove sort if home is selected
+    } else {
+      queryParams.sort = newVal;  // Set sort value
+    }
+    
+    clearArray();  // Clear the products to reload
+    router.push({ query: queryParams });  // Push updated query without changing page manually
+  }
+});
 
 
-watch(handleOptions.value.setQueryOptions, () => {
+watch(handleOptions.value.setQueryOptions, (newVal) => {
   let colorOptions = {
     filter: {
       options: {},
@@ -260,7 +246,12 @@ watch(handleOptions.value.setQueryOptions, () => {
       colorOptions.filter.options[key] = value;
     }
   });
-  clearArray();
+if((newVal.color && newVal.size) !=="" ) {
+  clearArray()
+}else{
+  return 
+}
+
   let parseQuery = prQuery()
   if (!parseQuery.filter) {
     parseQuery.filter = {};
@@ -299,13 +290,12 @@ watch(handleOptions.value.setQueryOptions, () => {
 
 onMounted(() => {
   let p = prQuery()
+  Object.assign(handleOptions.value.setQueryOptions, p.filter?.options || {});
   handleOptions.value.itemsIsExistInput = p.filter?.in_stock === 'true';
   document.addEventListener("scroll" , handleScroll)
   scrollTo(0 , 0)
   getPriceDataFromquery()
   productApi();
-
-  Object.assign(handleOptions.value.setQueryOptions, p.filter?.options || {});
 })
 </script>
 
@@ -327,7 +317,7 @@ onMounted(() => {
             <h3 @click="(() => {
               giveValueToTheSort('updated_at')
             })" :class="[route.query.sort == 'updated_at' ? 'redBorder' : 'textColor']">جدید ترین</h3>
-            <h3 @click="clearSort" :class="[!route.query.sort && 'redBorder']">پر بازدید ترین</h3>
+            <h3 @click="giveValueToTheSort('home')" :class="[!route.query.sort && 'redBorder']">پر بازدید ترین</h3>
           </div>
           <div class="render">
             <renderProducts  v-for="items in infoValue" :key="items.id" :items="items" :img="img" />
