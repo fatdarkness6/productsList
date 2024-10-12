@@ -69,10 +69,6 @@ function clearFilters() {
   }
 }
 
-// const toggleQuery = () => {
-//   handleOptions.value.submitQuery = !handleOptions.value.submitQuery;
-// };
-
 function loadMore() {
   ++handleOptions.value.page
 }
@@ -81,7 +77,7 @@ function handleScroll() {
   const scrollHeight = window.innerHeight + window.scrollY
   const offsetHeight = document.body.offsetHeight
   const distanceToBottom = offsetHeight - scrollHeight
-  if (distanceToBottom.toFixed(0) <= 0) {
+  if (distanceToBottom.toFixed(0) <= 1) {
     if (handleOptions.value.loading) {
       return
     } else {
@@ -178,80 +174,37 @@ function priceFilter() {
     return filterParams
   }
 }
+
 function setQueryInUrl() {
   let p = prQuery(); 
 
   handleOptions.value.page = 1; 
   p.page = handleOptions.value.page;
 
- 
+  
   let merge = _.merge(submitQueryOptions(), in_stock(), priceFilter(), p);
+  if (handleOptions.value.in_stock == false) {
+    merge.filter.in_stock = false; 
+  }else if (handleOptions.value.in_stock == true) {
+    merge.filter.in_stock = true;
+  }
   
   let obj = Object.values(merge.filter.options);
   if (obj.length > 0 || merge.filter?.in_stock !== false || merge.filter?.price !== undefined) {
     
-    
     if (merge.filter?.price !== undefined) {
       merge.filter.price = `${handleOptions.value.minPrice},${handleOptions.value.maxPrice}`;
     } else {
-      delete merge.filter.price; 
+      delete merge.filter?.price; 
     }
-    console.log(merge , p)
-  if(((p.filter.price) && p.filter.price !== merge.filter.price) && p.filter.option !== merge.filter.options) {
-      clearArray(); 
-    }
+    if (((p.filter?.price) && p.filter?.price !== merge.filter?.price) || p.filter?.in_stock !== handleOptions.value.in_stock || !_.isEqual(p.filter?.options, merge.filter?.options)) {
+  clearArray();
+}
     pushQuery(merge); 
   }
 }
 
 // ------------------------------------watchs-------------------------------------//
-
-// watch(() => handleOptions.value.itemsIsExistInput, () => {
-//   let filterParams = {
-//     filter: {
-//       in_stock: handleOptions.value.itemsIsExistInput
-//     },
-//   };
-
-//   // Clear the array only if it's a new filter being applied.
-//   if (handleOptions.value.page === 1) {
-
-//     clearArray();  // This clears the products only when the filter changes
-//   }
-//   pushQuery(filterParams);
-// });
-
-// watch(() => handleOptions.value.submitQuery, () => {
-//   if (handleOptions.value.minPrice !== null && handleOptions.value.maxPrice !== null && handleOptions.value.submitQuery) {
-//     let filterParams = {
-//       filter: {
-//         price: `${handleOptions.value.minPrice},${handleOptions.value.maxPrice}`
-//       },
-//     };
-//     clearArray()
-//     let parseQuery = prQuery()
-//     if(parseQuery?.filter?.options?.color ||parseQuery?.filter?.options?.size || parseQuery?.filter?.options?.in_stock || parseQuery?.page &&  pageCountValue.value.total_count>25) {
-//       route.query.page = 1
-//       scrollTo(0 , 0)
-//       if(parseQuery?.filter?.price){
-//         delete parseQuery.filter.price
-//         pushQuery(filterParams)
-//       }else {
-//         pushQuery(filterParams)
-//       }
-//     }else {
-//       console.log("214")
-//     }
-//   }
-// });
-
-// watch(() => route.query?.filter?.price, (newPrice) => {
-//   if (newPrice) {
-//     const [minPrice, maxPrice] = newPrice.split(',').map(Number);
-//     handleOptions.value.minPrice = minPrice;
-//     handleOptions.value.maxPrice = maxPrice;
-//   }
-// });
 
 watch(
   () => handleOptions.value.page,
@@ -298,56 +251,6 @@ watch(
     }
   }
 )
-
-// watch(handleOptions.value.setQueryOptions, (newVal) => {
-//   let colorOptions = {
-//     filter: {
-//       options: {},
-//     }
-//   };
-//   Object.keys(handleOptions.value.setQueryOptions).forEach((key) => {
-//     const value = handleOptions.value.setQueryOptions[key];
-//     if (value) {
-//       colorOptions.filter.options[key] = value;
-//     }
-//   });
-// if((newVal.color && newVal.size) !=="" ) {
-//   clearArray()
-// }else{
-//   return
-// }
-
-//   let parseQuery = prQuery()
-//   if (!parseQuery.filter) {
-//     parseQuery.filter = {};
-//   }
-//   if (!parseQuery.filter.options) {
-//     parseQuery.filter.options = {};
-//   }
-//   if ((parseQuery.filter?.price || parseQuery.filter?.in_stock) && pageCountValue.value.total_count > 25) {
-
-//     handleOptions.value.page = 1;
-//     scrollTo(0, 0);
-//     parseQuery.filter.options.color = null;
-
-//     Object.keys(colorOptions.filter.options).forEach((optionKey) => {
-//       parseQuery.filter.options[optionKey] = colorOptions.filter.options[optionKey];
-//     });
-//     options.value.forEach((e) => {
-//       if(handleOptions.value.setQueryOptions[e.name] == "") {
-//         return
-//       }else {
-//         pushQuery(parseQuery);
-//       }
-
-//   })
-
-//   } else {
-//     if (Object.keys(colorOptions.filter.options).length > 0) {
-//       pushQuery(colorOptions);
-//     }
-//   }
-// });
 
 // ------------------------------------onMounted-------------------------------------//
 
