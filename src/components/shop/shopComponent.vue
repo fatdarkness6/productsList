@@ -57,7 +57,9 @@ function clearFilters() {
   let pr = prQuery()
   handleOptions.value.minPrice = null
   handleOptions.value.maxPrice = null
-  Object.assign(handleOptions.value.setQueryOptions, pr.filter?.options || {})
+  Object.keys(handleOptions.value.setQueryOptions).forEach((value) => {
+    delete handleOptions.value.setQueryOptions[value]
+  })
 
   if (pr.filter && pr.sort) {
     router.push(`?page=1&sort=${route.query.sort}`)
@@ -104,11 +106,10 @@ function prQuery() {
 }
 
 function pushQuery(props) {
-  let qqs1 = prQuery()
-  let currentQuery = _.merge(qqs1, props)
-  console.log(currentQuery)
-  let qqs = qs.stringify(currentQuery)
-  router.push(`?${qqs}`)
+  let qqs1 = prQuery() // Get current query parameters
+  let currentQuery = _.merge(qqs1, props) // Merge qqs1 into props
+  let qqs = qs.stringify(currentQuery) // Prevent over-encoding
+  router.push(`?${qqs}`) // Push the updated query to the router
 }
 
 function giveValueToTheSort(sortOption) {
@@ -145,9 +146,9 @@ function submitQueryOptions() {
       colorOptions.filter.options[key] = value
     }
   })
-
   return colorOptions
 }
+
 function in_stock() {
   let filterParams = {
     filter: {
@@ -156,16 +157,16 @@ function in_stock() {
   }
   return filterParams
 }
-function priceFilter() {
-  if(handleOptions.value.minPrice && handleOptions.value.maxPrice) {
 
+function priceFilter() {
+  if (handleOptions.value.minPrice && handleOptions.value.maxPrice) {
     let filterParams = {
       filter: {
         price: `${handleOptions.value.minPrice},${handleOptions.value.maxPrice}`
       }
     }
     return filterParams
-  }else {
+  } else {
     let filterParams = {
       filter: {
         price: undefined
@@ -176,32 +177,37 @@ function priceFilter() {
 }
 
 function setQueryInUrl() {
-  let p = prQuery(); 
+  let p = prQuery()
+  let p2 = prQuery()
 
-  handleOptions.value.page = 1; 
-  p.page = handleOptions.value.page;
+  handleOptions.value.page = 1
+  p.page = handleOptions.value.page
+
+  const colorOptions = submitQueryOptions()
+  const stockOptions = in_stock()
+  const priceOptions = priceFilter()
 
   
-  let merge = _.merge(submitQueryOptions(), in_stock(), priceFilter(), p);
-  if (handleOptions.value.in_stock == false) {
-    merge.filter.in_stock = false; 
-  }else if (handleOptions.value.in_stock == true) {
-    merge.filter.in_stock = true;
-  }
-  
-  let obj = Object.values(merge.filter.options);
-  if (obj.length > 0 || merge.filter?.in_stock !== false || merge.filter?.price !== undefined) {
-    
-    if (merge.filter?.price !== undefined) {
-      merge.filter.price = `${handleOptions.value.minPrice},${handleOptions.value.maxPrice}`;
-    } else {
-      delete merge.filter?.price; 
+
+  if (
+    Object.keys(colorOptions.filter.options).length > 0 ||
+    priceOptions.filter.price !== undefined ||
+    stockOptions.filter.in_stock !== undefined
+  ) {
+    if (handleOptions.value.in_stock !== p2.filter?.in_stock) {
+      clearArray()
+      console.log("aadxcvxcvxcvxcvxcvxcvxcvxcvxcvxcvxcv")
+    }else if(!_.isEqual(handleOptions.value.setQueryOptions, p.filter?.options)) {
+      console.log(handleOptions.value.setQueryOptions, p.filter?.options)
+      clearArray()
+      
+    }else {
+      console.log(handleOptions.value.in_stock !== p2.filter?.in_stock , handleOptions.value.in_stock ,p2.filter?.in_stock )
     }
-    if (((p.filter?.price) && p.filter?.price !== merge.filter?.price) || p.filter?.in_stock !== handleOptions.value.in_stock || !_.isEqual(p.filter?.options, merge.filter?.options)) {
-  clearArray();
-}
-    pushQuery(merge); 
+    
   }
+  let mergedQuery = _.merge(p, colorOptions, stockOptions, priceOptions)
+  pushQuery(mergedQuery)
 }
 
 // ------------------------------------watchs-------------------------------------//
@@ -214,7 +220,7 @@ watch(
     }
     if (handleOptions.value.page == 1) {
       return
-    }else {
+    } else {
       pushQuery(filterParams)
     }
   }
@@ -231,19 +237,19 @@ watch(
 )
 
 watch(
-  () => handleOptions.value.sortBy, 
+  () => handleOptions.value.sortBy,
   (newVal) => {
     if (!handleOptions.value.loading) {
-      let currentQuery = prQuery() 
+      let currentQuery = prQuery()
 
       if (newVal === 'home') {
-       delete currentQuery.sort 
-        currentQuery.page = 1 
+        delete currentQuery.sort
+        currentQuery.page = 1
         handleOptions.value.page = 1
       } else {
         currentQuery.sort = newVal
-        currentQuery.page = 1  
-        handleOptions.value.page = 1 
+        currentQuery.page = 1
+        handleOptions.value.page = 1
       }
       let stringQuery = qs.stringify(currentQuery)
       router.push(`?${stringQuery}`)
@@ -257,7 +263,7 @@ watch(
 onMounted(() => {
   let p = prQuery()
   Object.assign(handleOptions.value.setQueryOptions, p.filter?.options || {})
-  handleOptions.value.in_stock = p.filter?.in_stock === 'true'
+  handleOptions.value.in_stock = p.filter?.in_stock
   document.addEventListener('scroll', handleScroll)
   scrollTo(0, 0)
   getPriceDataFromquery()
