@@ -81,7 +81,7 @@ function handleScroll() {
   const scrollHeight = window.innerHeight + window.scrollY
   const offsetHeight = document.body.offsetHeight
   const distanceToBottom = offsetHeight - scrollHeight
-  if (distanceToBottom.toFixed(0) <= 1) {
+  if (distanceToBottom.toFixed(0) <= 0) {
     if (handleOptions.value.loading) {
       return
     } else {
@@ -110,6 +110,7 @@ function prQuery() {
 function pushQuery(props) {
   let qqs1 = prQuery()
   let currentQuery = _.merge(qqs1, props)
+  console.log(currentQuery)
   let qqs = qs.stringify(currentQuery)
   router.push(`?${qqs}`)
 }
@@ -150,36 +151,6 @@ function submitQueryOptions() {
   })
 
   return colorOptions
-  // let parseQuery = prQuery()
-  // if (!parseQuery.filter) {
-  //   parseQuery.filter = {};
-  // }
-  // if (!parseQuery.filter.options) {
-  //   parseQuery.filter.options = {};
-  // }
-  // if ((parseQuery.filter?.price || parseQuery.filter?.in_stock) && pageCountValue.value.total_count > 25) {
-
-  //   // handleOptions.value.page = 1;
-  //   // scrollTo(0, 0);
-  //   // parseQuery.filter.options.color = null;
-
-  //   Object.keys(colorOptions.filter.options).forEach((optionKey) => {
-  //     parseQuery.filter.options[optionKey] = colorOptions.filter.options[optionKey];
-  //   });
-  //   options.value.forEach((e) => {
-  //     if(handleOptions.value.setQueryOptions[e.name] == "") {
-  //       return
-  //     }else {
-  //       pushQuery(parseQuery);
-  //     }
-
-  // })
-
-  // } else {
-  //   if (Object.keys(colorOptions.filter.options).length > 0) {
-  //     pushQuery(colorOptions);
-  //   }
-  // }
 }
 function in_stock() {
   let filterParams = {
@@ -208,13 +179,28 @@ function priceFilter() {
   }
 }
 function setQueryInUrl() {
+  let p = prQuery(); 
+
+  handleOptions.value.page = 1; 
+  p.page = handleOptions.value.page;
+
+ 
+  let merge = _.merge(submitQueryOptions(), in_stock(), priceFilter(), p);
   
-  let merge = _.merge(submitQueryOptions(), in_stock(), priceFilter())
-  let obj = Object.values(merge.filter.options)
-  if( obj.length > 0 || merge.filter?.in_stock !==false || merge.filter?.price !== undefined) {
-    clearArray()
+  let obj = Object.values(merge.filter.options);
+  if (obj.length > 0 || merge.filter?.in_stock !== false || merge.filter?.price !== undefined) {
     
-    pushQuery(merge)
+    
+    if (merge.filter?.price !== undefined) {
+      merge.filter.price = `${handleOptions.value.minPrice},${handleOptions.value.maxPrice}`;
+    } else {
+      delete merge.filter.price; 
+    }
+    console.log(merge , p)
+  if(((p.filter.price) && p.filter.price !== merge.filter.price) && p.filter.option !== merge.filter.options) {
+      clearArray(); 
+    }
+    pushQuery(merge); 
   }
 }
 
@@ -271,10 +257,13 @@ watch(
   () => handleOptions.value.page,
   () => {
     let filterParams = {
-      page: Number(handleOptions.value.page)
+      page: handleOptions.value.page
     }
-
-    pushQuery(filterParams)
+    if (handleOptions.value.page == 1) {
+      return
+    }else {
+      pushQuery(filterParams)
+    }
   }
 )
 
@@ -282,7 +271,7 @@ watch(
   () => route.query,
   () => {
     let p = prQuery()
-    handleOptions.value.itemsIsExistInput = p.filter?.in_stock
+    handleOptions.value.in_stock = p.filter?.in_stock
     Object.assign(handleOptions.value.setQueryOptions, p.filter?.options || {})
     productApi()
   }
@@ -292,21 +281,19 @@ watch(
   () => handleOptions.value.sortBy, 
   (newVal) => {
     if (!handleOptions.value.loading) {
-      let currentQuery = prQuery() // Parse the current URL query
+      let currentQuery = prQuery() 
 
       if (newVal === 'home') {
-        delete currentQuery.sort // Remove the sort key
-        currentQuery.page = 1 // Reset the page to 1
+       delete currentQuery.sort 
+        currentQuery.page = 1 
+        handleOptions.value.page = 1
       } else {
-        currentQuery.sort = newVal // Set the new sort value
+        currentQuery.sort = newVal
+        currentQuery.page = 1  
+        handleOptions.value.page = 1 
       }
-
-      // Convert the modified query object back to a query string
-      let updatedQueryString = qs.stringify(currentQuery)
-      
-      // Push the new query string to the router
-      router.push(`?${updatedQueryString}`)
-
+      let stringQuery = qs.stringify(currentQuery)
+      router.push(`?${stringQuery}`)
       clearArray()
     }
   }
@@ -367,7 +354,7 @@ watch(
 onMounted(() => {
   let p = prQuery()
   Object.assign(handleOptions.value.setQueryOptions, p.filter?.options || {})
-  // handleOptions.value.itemsIsExistInput = p.filter?.in_stock === 'true'
+  handleOptions.value.in_stock = p.filter?.in_stock === 'true'
   document.addEventListener('scroll', handleScroll)
   scrollTo(0, 0)
   getPriceDataFromquery()
