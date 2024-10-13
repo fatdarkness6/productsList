@@ -175,10 +175,20 @@ function priceFilter() {
     return filterParams
   }
 }
+// function customizer(value1, value2) {
+//   if (typeof value1 === 'number' && typeof value2 === 'string') {
+//     return value1 == value2; // Loose comparison to ignore type
+//   }
+//   if (typeof value1 === 'string' && typeof value2 === 'number') {
+//     return value1 == value2; // Loose comparison to ignore type
+//   }
+//   // If not number-string pair, fall back to Lodash's default behavior
+//   return undefined;
+// }
 
 function setQueryInUrl() {
   let p = prQuery()
-  let p2 = prQuery()
+  // let p2 = prQuery()
 
   handleOptions.value.page = 1
   p.page = handleOptions.value.page
@@ -187,27 +197,36 @@ function setQueryInUrl() {
   const stockOptions = in_stock()
   const priceOptions = priceFilter()
 
-  
-
+  let mergedQuery = _.merge(p, colorOptions, stockOptions, priceOptions)
   if (
     Object.keys(colorOptions.filter.options).length > 0 ||
     priceOptions.filter.price !== undefined ||
     stockOptions.filter.in_stock !== undefined
   ) {
-    if (handleOptions.value.in_stock !== p2.filter?.in_stock) {
-      clearArray()
-      console.log("aadxcvxcvxcvxcvxcvxcvxcvxcvxcvxcvxcv")
-    }else if(!_.isEqual(handleOptions.value.setQueryOptions, p.filter?.options)) {
-      console.log(handleOptions.value.setQueryOptions, p.filter?.options)
-      clearArray()
-      
-    }else {
-      console.log(handleOptions.value.in_stock !== p2.filter?.in_stock , handleOptions.value.in_stock ,p2.filter?.in_stock )
-    }
     
+  let previousQuery = qs.parse(location.search, { ignoreQueryPrefix: true });
+      
+     console.log(mergedQuery, previousQuery)
+    if (
+      mergedQuery.filter?.in_stock !== previousQuery.filter?.in_stock ||
+      mergedQuery.filter?.price !== previousQuery.filter?.price ||
+      !_.isEqual(mergedQuery.filter?.options , previousQuery.filter?.options)
+    ) {
+    clearArray();
   }
-  let mergedQuery = _.merge(p, colorOptions, stockOptions, priceOptions)
-  pushQuery(mergedQuery)
+    // if (handleOptions.value.in_stock !== p2.filter?.in_stock) {
+    //   clearArray()
+    //   console.log("aadxcvxcvxcvxcvxcvxcvxcvxcvxcvxcvxcv")
+    // }else if(!_.isEqual(handleOptions.value.setQueryOptions, p.filter?.options)) {
+    //   console.log(handleOptions.value.setQueryOptions, p.filter?.options)
+    //   clearArray()
+      
+    // }else {
+    //   console.log(handleOptions.value.in_stock !== p2.filter?.in_stock , handleOptions.value.in_stock ,p2.filter?.in_stock )
+    // }
+    pushQuery(mergedQuery)
+  }
+  
 }
 
 // ------------------------------------watchs-------------------------------------//
@@ -216,7 +235,7 @@ watch(
   () => handleOptions.value.page,
   () => {
     let filterParams = {
-      page: handleOptions.value.page
+      page: Number(handleOptions.value.page)
     }
     if (handleOptions.value.page == 1) {
       return
@@ -264,10 +283,14 @@ onMounted(() => {
   let p = prQuery()
   Object.assign(handleOptions.value.setQueryOptions, p.filter?.options || {})
   handleOptions.value.in_stock = p.filter?.in_stock
+  let filterParams = {
+    page: p.page ? Number(p.page) : Number(handleOptions.value.page)
+  }
   document.addEventListener('scroll', handleScroll)
   scrollTo(0, 0)
   getPriceDataFromquery()
   productApi()
+  pushQuery(filterParams)
 })
 </script>
 

@@ -129,7 +129,7 @@ let finalyPrice = computed(() => {
                     </div>
                     <div class="product">
                         <div v-for="items in getDataFromLocalStorage" :key="items.id" class="productInfo">
-                            <RenderCart :key="items.id" :items="items" :data="getDataFromLocalStorage" :cal="calculateTotalPrice" />
+                            <RenderCart :key="items.id" :items="items" :data="getDataFromLocalStorage" @response="(res) => calculateTotalPrice(res)" />
                         </div>
                     </div>
                 </div>

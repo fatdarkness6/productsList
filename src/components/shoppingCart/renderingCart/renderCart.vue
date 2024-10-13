@@ -3,8 +3,8 @@ import { onMounted, ref, watch } from 'vue';
 let props = defineProps({
     items : Object,
     data: Array,
-    cal : Function
 })
+let emit = defineEmits(['response'])
 
 let addNumberOfProduct = ref(1)
 
@@ -31,14 +31,14 @@ watch(addNumberOfProduct, () => {
     props.items.numberOfProducts = addNumberOfProduct.value
     props.data.splice(numberOfProducts, 1 , props.items)
    localStorage.setItem('product', JSON.stringify(props.data))
-   props.cal(props.items)
+  emit('response', props.items)
 })
 
 
 
 onMounted(() => {
     addNumberOfProduct.value = props.items.numberOfProducts
-    props.cal(props.items)
+    emit('response', props.items)
 })
 </script>
 
