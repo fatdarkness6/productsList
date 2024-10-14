@@ -12,18 +12,17 @@ let pageCountValue = ref({})
 let img = ref([])
 let options = ref([])
 let setClass = ref(false)
-let handleOptions = ref({
+let staticValueFilters = ref({
   in_stock: false,
   minPrice: null,
   maxPrice: null,
   setQueryOptions: {},
-  submitQuery: false,
+})
+let handleOptions = ref({
   showInputsForPrice: false,
   loading: false,
-  recognizeSort: false,
   page: 1,
   sortBy: '',
-  updateClearFilter: 1
 })
 
 const router = useRouter()
@@ -55,10 +54,11 @@ async function productApi() {
 
 function clearFilters() {
   let pr = prQuery()
-  handleOptions.value.minPrice = null
-  handleOptions.value.maxPrice = null
-  Object.keys(handleOptions.value.setQueryOptions).forEach((value) => {
-    delete handleOptions.value.setQueryOptions[value]
+  if(!handleOptions.value.loading) {
+    staticValueFilters.value.minPrice = null
+  staticValueFilters.value.maxPrice = null
+  Object.keys(staticValueFilters.value.setQueryOptions).forEach((value) => {
+    delete staticValueFilters.value.setQueryOptions[value]
   })
 
   if (pr.filter && pr.sort) {
@@ -69,6 +69,8 @@ function clearFilters() {
     handleOptions.value.page = 1
     clearArray()
   }
+  }
+  
 }
 
 function loadMore() {
@@ -106,15 +108,15 @@ function prQuery() {
 }
 
 function pushQuery(props) {
-  let qqs1 = prQuery() // Get current query parameters
-  let currentQuery = _.merge(qqs1, props) // Merge qqs1 into props
-  let qqs = qs.stringify(currentQuery) // Prevent over-encoding
-  router.push(`?${qqs}`) // Push the updated query to the router
+  let qqs1 = prQuery()
+  let currentQuery = _.merge(qqs1, props)
+  let qqs = qs.stringify(currentQuery)
+  router.push(`?${qqs}`)
 }
 
 function giveValueToTheSort(sortOption) {
   if (!handleOptions.value.loading) {
-    handleOptions.value.sortBy = sortOption // This triggers the watcher
+    handleOptions.value.sortBy = sortOption
   }
 }
 
@@ -125,11 +127,11 @@ function getPriceDataFromquery() {
     if (priceArray.length === 2) {
       const minPrice = parseInt(priceArray[0])
       const maxPrice = parseInt(priceArray[1])
-      handleOptions.value.minPrice = minPrice
-      handleOptions.value.maxPrice = maxPrice
+      staticValueFilters.value.minPrice = minPrice
+      staticValueFilters.value.maxPrice = maxPrice
     } else {
       const price = parseInt(priceArray[0], 10)
-      handleOptions.value.minPrice = price
+      staticValueFilters.value.minPrice = price
     }
   }
 }
@@ -140,8 +142,8 @@ function submitQueryOptions() {
       options: {}
     }
   }
-  Object.keys(handleOptions.value.setQueryOptions).forEach((key) => {
-    const value = handleOptions.value.setQueryOptions[key]
+  Object.keys(staticValueFilters.value.setQueryOptions).forEach((key) => {
+    const value = staticValueFilters.value.setQueryOptions[key]
     if (value) {
       colorOptions.filter.options[key] = value
     }
@@ -152,17 +154,17 @@ function submitQueryOptions() {
 function in_stock() {
   let filterParams = {
     filter: {
-      in_stock: handleOptions.value.in_stock
+      in_stock: staticValueFilters.value.in_stock
     }
   }
   return filterParams
 }
 
 function priceFilter() {
-  if (handleOptions.value.minPrice && handleOptions.value.maxPrice) {
+  if (staticValueFilters.value.minPrice && staticValueFilters.value.maxPrice) {
     let filterParams = {
       filter: {
-        price: `${handleOptions.value.minPrice},${handleOptions.value.maxPrice}`
+        price: `${staticValueFilters.value.minPrice},${staticValueFilters.value.maxPrice}`
       }
     }
     return filterParams
@@ -175,27 +177,14 @@ function priceFilter() {
     return filterParams
   }
 }
-// function customizer(value1, value2) {
-//   if (typeof value1 === 'number' && typeof value2 === 'string') {
-//     return value1 == value2; // Loose comparison to ignore type
-//   }
-//   if (typeof value1 === 'string' && typeof value2 === 'number') {
-//     return value1 == value2; // Loose comparison to ignore type
-//   }
-//   // If not number-string pair, fall back to Lodash's default behavior
-//   return undefined;
-// }
-
 function setQueryInUrl() {
   let p = prQuery()
-  // let p2 = prQuery()
-
   handleOptions.value.page = 1
   p.page = handleOptions.value.page
-
   const colorOptions = submitQueryOptions()
   const stockOptions = in_stock()
   const priceOptions = priceFilter()
+
 
   let mergedQuery = _.merge(p, colorOptions, stockOptions, priceOptions)
   if (
@@ -203,30 +192,25 @@ function setQueryInUrl() {
     priceOptions.filter.price !== undefined ||
     stockOptions.filter.in_stock !== undefined
   ) {
-    
-  let previousQuery = qs.parse(location.search, { ignoreQueryPrefix: true });
-      
-     console.log(mergedQuery, previousQuery)
-    if (
-      mergedQuery.filter?.in_stock !== previousQuery.filter?.in_stock ||
-      mergedQuery.filter?.price !== previousQuery.filter?.price ||
-      !_.isEqual(mergedQuery.filter?.options , previousQuery.filter?.options)
-    ) {
-    clearArray();
-  }
-    // if (handleOptions.value.in_stock !== p2.filter?.in_stock) {
-    //   clearArray()
-    //   console.log("aadxcvxcvxcvxcvxcvxcvxcvxcvxcvxcvxcv")
-    // }else if(!_.isEqual(handleOptions.value.setQueryOptions, p.filter?.options)) {
-    //   console.log(handleOptions.value.setQueryOptions, p.filter?.options)
-    //   clearArray()
-      
-    // }else {
-    //   console.log(handleOptions.value.in_stock !== p2.filter?.in_stock , handleOptions.value.in_stock ,p2.filter?.in_stock )
-    // }
+    let previousQuery = qs.parse(location.search, { ignoreQueryPrefix: true })
+    let obj = previousQuery.filter?.options === undefined ? {} : previousQuery.filter?.options
+    if (((mergedQuery.filter.in_stock || previousQuery.filter?.in_stock) !== undefined) && mergedQuery.filter.in_stock !== previousQuery.filter?.in_stock) {
+      console.log('in_stock&&inif' , mergedQuery.filter.in_stock , previousQuery.filter?.in_stock)
+        clearArray()
+    }else if(((mergedQuery.filter?.price || previousQuery.filter?.price) !== undefined) && mergedQuery.filter.price !== previousQuery.filter?.price) {
+      console.log('priceinif')
+        clearArray()
+    } else if( !_.isEqual(mergedQuery.filter?.options, obj)) {
+      console.log('optionsinif' , mergedQuery.filter?.options, obj)
+      clearArray()
+    }else {
+      console.log("else")
+      console.log("in_stock", mergedQuery.filter.in_stock , previousQuery.filter?.in_stock)
+      console.log('price', mergedQuery.filter.price, previousQuery.filter?.price)
+      console.log('options', mergedQuery.filter.options, obj)
+    }
     pushQuery(mergedQuery)
   }
-  
 }
 
 // ------------------------------------watchs-------------------------------------//
@@ -249,8 +233,8 @@ watch(
   () => route.query,
   () => {
     let p = prQuery()
-    handleOptions.value.in_stock = p.filter?.in_stock
-    Object.assign(handleOptions.value.setQueryOptions, p.filter?.options || {})
+    staticValueFilters.value.in_stock = p.filter?.in_stock
+    Object.assign(staticValueFilters.value.setQueryOptions, p.filter?.options || {})
     productApi()
   }
 )
@@ -260,7 +244,6 @@ watch(
   (newVal) => {
     if (!handleOptions.value.loading) {
       let currentQuery = prQuery()
-
       if (newVal === 'home') {
         delete currentQuery.sort
         currentQuery.page = 1
@@ -281,8 +264,8 @@ watch(
 
 onMounted(() => {
   let p = prQuery()
-  Object.assign(handleOptions.value.setQueryOptions, p.filter?.options || {})
-  handleOptions.value.in_stock = p.filter?.in_stock
+  Object.assign(staticValueFilters.value.setQueryOptions, p.filter?.options || {})
+  staticValueFilters.value.in_stock = p.filter?.in_stock
   let filterParams = {
     page: p.page ? Number(p.page) : Number(handleOptions.value.page)
   }
@@ -338,7 +321,7 @@ onMounted(() => {
             </h3>
           </div>
           <div class="render">
-            <renderProducts v-for="items in infoValue" :key="items.id" :items="items" :img="img" />
+            <renderProducts v-for="items in infoValue" :key="items.id" :items="items" :img="img"   />
           </div>
           <h1 style="margin: 10px 0 200px 0" v-if="handleOptions.loading">loading...</h1>
           <h1 v-else style="margin: 10px 0 200px 0">
@@ -365,7 +348,7 @@ onMounted(() => {
               <select
                 v-for="option in options"
                 :key="option.id"
-                v-model="handleOptions.setQueryOptions[option.name]"
+                v-model="staticValueFilters.setQueryOptions[option.name]"
               >
                 <option value="">Select {{ option.name }}</option>
                 <option
@@ -381,7 +364,7 @@ onMounted(() => {
           <div class="existProducts flx">
             <div class="form-check form-switch">
               <input
-                v-model="handleOptions.in_stock"
+                v-model="staticValueFilters.in_stock"
                 class="form-check-input"
                 type="checkbox"
                 role="switch"
@@ -403,8 +386,8 @@ onMounted(() => {
               <h4>رنج قیمت</h4>
             </div>
             <div id="input" :class="[handleOptions.showInputsForPrice ? 'show' : 'dontShow']">
-              <input v-model="handleOptions.minPrice" type="number" placeholder="حد اقل" />
-              <input v-model="handleOptions.maxPrice" type="number" placeholder="حد اکثر" />
+              <input v-model="staticValueFilters.minPrice" type="number" placeholder="حد اقل" />
+              <input v-model="staticValueFilters.maxPrice" type="number" placeholder="حد اکثر" />
             </div>
           </div>
           <button @click="setQueryInUrl">اعمال فیلتر ها</button>
