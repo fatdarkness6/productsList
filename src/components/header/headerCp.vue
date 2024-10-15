@@ -1,10 +1,14 @@
 <script setup>
-import {  ref } from 'vue';
+import {  onMounted } from 'vue';
 import { RouterLink } from 'vue-router';
 import "../../assets/base.css"
+import { usePiniaStore } from '@/stores/makeStoreWithPinia.js';
 
-let getDataFromLocalStorage = ref(JSON.parse(localStorage.getItem('product')) || []);
-let dataLength = ref(getDataFromLocalStorage.value?.length)
+let store = usePiniaStore()
+
+onMounted(() => {
+  store.getDataFromLocalStorage()
+})
 
 </script>
 
@@ -17,7 +21,7 @@ let dataLength = ref(getDataFromLocalStorage.value?.length)
           <div class="length-of-cart">
             <i class="fa-solid fa-cart-shopping"></i>
             <div class="border1">
-              <span>{{ dataLength }}</span>
+              <span>{{ store.getProductsFromLocalStorageLength }}</span>
             </div>
           </div>
         </RouterLink>

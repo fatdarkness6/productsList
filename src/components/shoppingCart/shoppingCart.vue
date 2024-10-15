@@ -1,9 +1,13 @@
 <script setup>
 import HeaderCp from '../header/headerCp.vue';
-import { computed, ref } from 'vue';
+import { computed, ref , onMounted } from 'vue';
 import RenderCart from './renderingCart/renderCart.vue';
+import { usePiniaStore } from '@/stores/makeStoreWithPinia';
 
-let getDataFromLocalStorage = ref(JSON.parse(localStorage.getItem('product')));
+let store = usePiniaStore()
+onMounted(() => {
+  store.getDataFromLocalStorage()
+})
 let priceArray = ref([])
 let allProductsPrices = ref({
     allPrices : 0,
@@ -16,7 +20,6 @@ function calculateTotalPrice(props) {
     let totalPriceForProduct = props.attributes.price * props.numberOfProducts;
 
     if (productIndex !== -1) {
-        console.log("Product found at index:", productIndex);
         priceArray.value[productIndex].price = totalPriceForProduct;
     } else {
         priceArray.value.push({
@@ -26,6 +29,16 @@ function calculateTotalPrice(props) {
     }
     let total = priceArray.value.reduce((prev, next) => prev + next.price, 0);
     allProductsPrices.value.allPrices = parseFloat(total.toFixed(2));
+}
+
+function recalculateTotalPriceAfterRemoval() {
+  priceArray.value = store.getProductsFromLocalStorage.map(product => ({
+    id: product.id,
+    price: product.attributes.price * product.numberOfProducts
+  }));
+
+  let total = priceArray.value.reduce((prev, next) => prev + next.price, 0);
+  allProductsPrices.value.allPrices = parseFloat(total.toFixed(2));
 }
 
 let finalyPrice = computed(() => {
@@ -128,8 +141,8 @@ let finalyPrice = computed(() => {
                         <h6>سبد خرید </h6>
                     </div>
                     <div class="product">
-                        <div v-for="items in getDataFromLocalStorage" :key="items.id" class="productInfo">
-                            <RenderCart :key="items.id" :items="items" :data="getDataFromLocalStorage" @response="(res) => calculateTotalPrice(res)" />
+                        <div v-for="items in store.getProductsFromLocalStorage" :key="items.id" class="productInfo">
+                            <RenderCart :key="items.id" :items="items" :store="store" :data="store.getProductsFromLocalStorage" @response="(res) => calculateTotalPrice(res)" @product-removed="recalculateTotalPriceAfterRemoval" />
                         </div>
                     </div>
                 </div>

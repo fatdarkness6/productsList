@@ -3,12 +3,12 @@ import { ref, watch, onMounted } from 'vue'
 
 const props = defineProps({
   items: Object,
-  img: Object
+  img: Object,
+  store: Object,
 })
-
 const dsButton = ref(false)
 let addNumberOfProduct = ref(1)
-const getDataFromLocalStorage = ref(JSON.parse(localStorage.getItem('product')) || [])
+const getDataFromLocalStorage = ref([])
 const productImage = props.img.find(
   (image) => image?.id === props.items?.relationships.images?.data[0]?.id
 )
@@ -28,16 +28,21 @@ function decreaseNumberOfProduct() {
 }
 
 function addProductToLocalStorage(product) {
-  const storedProducts = JSON.parse(localStorage.getItem('product')) || []
+  const storedProducts = props.store.getProductsFromLocalStorage
   dsButton.value = true
   product.img = productImage?.attributes.original_url || ''
   product.numberOfProducts = 1
-  storedProducts.push(product)
+  props.store.addItemToData(product)
   localStorage.setItem('product', JSON.stringify(storedProducts))
   getDataFromLocalStorage.value = [...storedProducts]
 }
 function fnProducts() {
-  return getDataFromLocalStorage.value.find((pr) => pr.id === props.items.id)
+  if(getDataFromLocalStorage.value.length > 0) {
+    return getDataFromLocalStorage.value.find((pr) => pr.id === props.items.id)
+  }else {
+
+    return props.store.getProductsFromLocalStorage.find((pr) => pr.id === props.items.id)
+  }
 }
 
 // ------------------------------------watch-------------------------------------//
@@ -56,10 +61,9 @@ watch(addNumberOfProduct, () => {
 })
 
 // ------------------------------------onMounted-------------------------------------//
-
 onMounted(() => {
   let fn = fnProducts()
-  const storedProducts = JSON.parse(localStorage.getItem('product')) || []
+  const storedProducts = props.store.getProductsFromLocalStorage
   getDataFromLocalStorage.value = storedProducts
 
   getDataFromLocalStorage.value.forEach((pr) => {

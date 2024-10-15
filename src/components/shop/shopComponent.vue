@@ -3,6 +3,7 @@ import { onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import renderProducts from './renderProducts/renderProducts.vue'
 import headerCp from '../header/headerCp.vue'
+import { usePiniaStore } from '@/stores/makeStoreWithPinia'
 import axios from 'axios'
 import qs from 'qs'
 import _ from 'lodash'
@@ -24,7 +25,7 @@ let handleOptions = ref({
   page: 1,
   sortBy: '',
 })
-
+let store = usePiniaStore()
 const router = useRouter()
 const route = useRoute()
 
@@ -274,6 +275,7 @@ onMounted(() => {
   getPriceDataFromquery()
   productApi()
   pushQuery(filterParams)
+  store.getDataFromLocalStorage()
 })
 </script>
 
@@ -321,7 +323,7 @@ onMounted(() => {
             </h3>
           </div>
           <div class="render">
-            <renderProducts v-for="items in infoValue" :key="items.id" :items="items" :img="img"   />
+            <renderProducts v-for="items in infoValue" :key="items.id" :items="items" :img="img" :store="store"   />
           </div>
           <h1 style="margin: 10px 0 200px 0" v-if="handleOptions.loading">loading...</h1>
           <h1 v-else style="margin: 10px 0 200px 0">
