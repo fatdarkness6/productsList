@@ -1,8 +1,8 @@
 <script setup>
 import { onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import renderProducts from './renderProducts/renderProducts.vue'
-import headerCp from '../header/headerCp.vue'
+import renderProducts from '@/components/renderProducts.vue'
+import headerCp from '@/components/header/headerCp.vue'
 import { usePiniaStore } from '@/stores/makeStoreWithPinia'
 import axios from 'axios'
 import qs from 'qs'

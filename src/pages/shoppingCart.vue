@@ -1,7 +1,7 @@
 <script setup>
-import HeaderCp from '../header/headerCp.vue';
+import HeaderCp from '@/components/header/headerCp.vue';
 import { computed, ref , onMounted } from 'vue';
-import RenderCart from './renderingCart/renderCart.vue';
+import RenderCart from '@/components/renderCart.vue';
 import { usePiniaStore } from '@/stores/makeStoreWithPinia';
 
 let store = usePiniaStore()
