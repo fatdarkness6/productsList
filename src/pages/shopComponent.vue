@@ -17,13 +17,13 @@ let staticValueFilters = ref({
   in_stock: false,
   minPrice: null,
   maxPrice: null,
-  setQueryOptions: {},
+  setQueryOptions: {}
 })
 let handleOptions = ref({
   showInputsForPrice: false,
   loading: false,
   page: 1,
-  sortBy: '',
+  sortBy: ''
 })
 let store = usePiniaStore()
 const router = useRouter()
@@ -34,7 +34,7 @@ const route = useRoute()
 async function productApi() {
   handleOptions.value.loading = true
   await axios
-    .get(`https://demo.spreecommerce.org/api/v2/storefront/products?include=images`, {
+    .get(`/api/api/v2/storefront/products?include=images`, {
       params: route.query
     })
     .then((response) => {
@@ -55,23 +55,22 @@ async function productApi() {
 
 function clearFilters() {
   let pr = prQuery()
-  if(!handleOptions.value.loading) {
+  if (!handleOptions.value.loading) {
     staticValueFilters.value.minPrice = null
-  staticValueFilters.value.maxPrice = null
-  Object.keys(staticValueFilters.value.setQueryOptions).forEach((value) => {
-    delete staticValueFilters.value.setQueryOptions[value]
-  })
+    staticValueFilters.value.maxPrice = null
+    Object.keys(staticValueFilters.value.setQueryOptions).forEach((value) => {
+      delete staticValueFilters.value.setQueryOptions[value]
+    })
 
-  if (pr.filter && pr.sort) {
-    router.push(`?page=1&sort=${route.query.sort}`)
-    clearArray()
-  } else if (pr.filter) {
-    router.push(`?page=1`)
-    handleOptions.value.page = 1
-    clearArray()
+    if (pr.filter && pr.sort) {
+      router.push(`?page=1&sort=${route.query.sort}`)
+      clearArray()
+    } else if (pr.filter) {
+      router.push(`?page=1`)
+      handleOptions.value.page = 1
+      clearArray()
+    }
   }
-  }
-  
 }
 
 function loadMore() {
@@ -186,7 +185,6 @@ function setQueryInUrl() {
   const stockOptions = in_stock()
   const priceOptions = priceFilter()
 
-
   let mergedQuery = _.merge(p, colorOptions, stockOptions, priceOptions)
   if (
     Object.keys(colorOptions.filter.options).length > 0 ||
@@ -195,18 +193,24 @@ function setQueryInUrl() {
   ) {
     let previousQuery = qs.parse(location.search, { ignoreQueryPrefix: true })
     let obj = previousQuery.filter?.options === undefined ? {} : previousQuery.filter?.options
-    if (((mergedQuery.filter.in_stock || previousQuery.filter?.in_stock) !== undefined) && mergedQuery.filter.in_stock !== previousQuery.filter?.in_stock) {
-      console.log('in_stock&&inif' , mergedQuery.filter.in_stock , previousQuery.filter?.in_stock)
-        clearArray()
-    }else if(((mergedQuery.filter?.price || previousQuery.filter?.price) !== undefined) && mergedQuery.filter.price !== previousQuery.filter?.price) {
-      console.log('priceinif')
-        clearArray()
-    } else if( !_.isEqual(mergedQuery.filter?.options, obj)) {
-      console.log('optionsinif' , mergedQuery.filter?.options, obj)
+    if (
+      (mergedQuery.filter.in_stock || previousQuery.filter?.in_stock) !== undefined &&
+      mergedQuery.filter.in_stock !== previousQuery.filter?.in_stock
+    ) {
+      console.log('in_stock&&inif', mergedQuery.filter.in_stock, previousQuery.filter?.in_stock)
       clearArray()
-    }else {
-      console.log("else")
-      console.log("in_stock", mergedQuery.filter.in_stock , previousQuery.filter?.in_stock)
+    } else if (
+      (mergedQuery.filter?.price || previousQuery.filter?.price) !== undefined &&
+      mergedQuery.filter.price !== previousQuery.filter?.price
+    ) {
+      console.log('priceinif')
+      clearArray()
+    } else if (!_.isEqual(mergedQuery.filter?.options, obj)) {
+      console.log('optionsinif', mergedQuery.filter?.options, obj)
+      clearArray()
+    } else {
+      console.log('else')
+      console.log('in_stock', mergedQuery.filter.in_stock, previousQuery.filter?.in_stock)
       console.log('price', mergedQuery.filter.price, previousQuery.filter?.price)
       console.log('options', mergedQuery.filter.options, obj)
     }
@@ -323,7 +327,13 @@ onMounted(() => {
             </h3>
           </div>
           <div class="render">
-            <renderProducts v-for="items in infoValue" :key="items.id" :items="items" :img="img" :store="store"   />
+            <renderProducts
+              v-for="items in infoValue"
+              :key="items.id"
+              :items="items"
+              :img="img"
+              :store="store"
+            />
           </div>
           <h1 style="margin: 10px 0 200px 0" v-if="handleOptions.loading">loading...</h1>
           <h1 v-else style="margin: 10px 0 200px 0">
