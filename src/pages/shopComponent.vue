@@ -30,11 +30,12 @@ const router = useRouter()
 const route = useRoute()
 
 // ------------------------------------------functions------------------------------------------//
-
+const proxyUrl = 'https://cors-anywhere.herokuapp.com/'
+const targetUrl = 'https://demo.spreecommerce.org/api/v2/storefront/products?include=images&page=1'
 async function productApi() {
   handleOptions.value.loading = true
   await axios
-    .get(`/api/api/v2/storefront/products?include=images`, {
+    .get(proxyUrl + targetUrl, {
       params: route.query
     })
     .then((response) => {
